@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main # 或者是你的主分支名
+      - main
 
 jobs:
   build-and-deploy:
@@ -17,12 +17,31 @@ jobs:
           npm install
           npm run build
 
+      # 新增步骤：将当前电脑的公钥添加到服务器白名单
+      - name: Add local PC public key to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p ~/.ssh
+            chmod 700 ~/.ssh
+            # 检查公钥是否已存在，不存在则追加
+            if ! grep -q "administrator@DESKTOP-3H5B1U2" ~/.ssh/authorized_keys; then
+              echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDs8BryZTa5Go/Y7d+tE3twVALkTmd5MZmIRu34PeAsPVq4V0x9ABcZ+FBU5X2mIcW/WYCaCHPR6PL3v3RuLQTPEkglLv1M9uY2Te4+AVh6X+4lTXltQ5qjix9xAg5rgZbCoQ1xYSsb8HxiRR1MFf1SnY6k/yrnINEUX6jBq13MvS4nC6HaFcMCm6Ac3dK9nFglFQioKXan1QWNDq8KDkQJCh1cM3LNUfa94hbYmREwkDLO7G2bjqDYrxYoZooPxNOftO1dWBK63Ig9ONIb1PhAjwBmTIhFGm6wphdUvS+bag6ZGFbGzKg6ch+eYEs5TP8wyjydg/Hw8s9Cb01xJKvkvnOLTrkoaigCJArhwFxK111I4N5xS7u5aSf9XVD1NZYzJ6UYG3KQpJLkCFurP6RITihtdxV8HlISurb/N80rsdFrdFoLJ19ZbY0wPgckSCFssJ/1JVQbYPJLyWOGi2dqg/vgfYP9VmZeRkAqrNOxMC4F+mK95yrQ/hmgF7S7OkcoTbnQ/1lKcZTwYEdEpl8DqDNMUR4cTbQwGMHpsGDf7wdqic7Xunld45XSi2IaPH4okEti5kEOmbzHHWRfvN+5IufA5yVv/Fz653ddkxa1NkfgobkojP64VROg/PjqC6q7STPjFxeV44wXIR+KfVdwk3MSY9MSZw7dk/DR+pcyEQ== administrator@DESKTOP-3H5B1U2" >> ~/.ssh/authorized_keys
+              chmod 600 ~/.ssh/authorized_keys
+              echo "Public key added successfully!"
+            else
+              echo "Public key already exists."
+            fi
+
       - name: Deploy to Server
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           ARGS: "-avzr --delete"
-          SOURCE: "dist/" # 构建后的文件夹
+          SOURCE: "dist/"
           REMOTE_HOST: ${{ secrets.SERVER_IP }}
           REMOTE_USER: ${{ secrets.SERVER_USER }}
-          TARGET: "/var/www/LoverMemory/dist" # 服务器上的目标路径
+          TARGET: "/var/www/LoverMemory/dist"
