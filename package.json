@@ -1,22 +1,22 @@
 {
-  "name": "keepsake",
+  "name": "lover-memory",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "npm run build --workspace @lover-memory/shared && npm run build --workspace @lover-memory/api && npm run build --workspace @lover-memory/worker && npm run build --workspace @lover-memory/web",
+    "dev:web": "npm run dev --workspace @lover-memory/web",
+    "dev:api": "npm run dev --workspace @lover-memory/api",
+    "dev:worker": "npm run dev --workspace @lover-memory/worker",
+    "prisma:generate": "npm run prisma:generate --workspace @lover-memory/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace @lover-memory/api",
+    "test:api": "npm run test --workspace @lover-memory/api",
+    "test:web": "npm run test --workspace @lover-memory/web"
   },
-  "dependencies": {
-    "@tailwindcss/vite": "^4.2.2",
-    "lucide-vue-next": "^0.577.0",
-    "tailwindcss": "^4.2.2",
-    "vue": "^3.5.30",
-    "vue-router": "^5.0.3"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.5",
-    "vite": "^8.0.1"
+  "engines": {
+    "node": ">=24.0.0"
   }
 }
