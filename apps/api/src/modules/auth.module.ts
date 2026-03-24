@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  Inject,
   Injectable,
   Module,
   Post,
@@ -77,8 +78,8 @@ class RecoveryVerifyDto {
 @Injectable()
 class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly config: ConfigService
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(ConfigService) private readonly config: ConfigService
   ) {}
 
   private get rpID() {
@@ -432,7 +433,7 @@ class AuthService {
 
 @Controller()
 class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(@Inject(AuthService) private readonly authService: AuthService) {}
 
   @Public()
   @Get('session')

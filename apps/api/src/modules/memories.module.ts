@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Injectable, Module, Param, Patch, Post, Query } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, Inject, Injectable, Module, Param, Patch, Post, Query } from '@nestjs/common'
 import { IsArray, IsDateString, IsIn, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator'
 import { PrismaService } from '../prisma/prisma.service.js'
 import { CurrentUser } from '../security/current-user.decorator.js'
@@ -46,7 +46,7 @@ class MemoryMutationDto {
 
 @Injectable()
 class MemoriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async list(auth: AuthContext, query: { q?: string; mood?: string; from?: string; to?: string }) {
     const coupleSpaceId = requireCoupleSpace(auth)
@@ -213,7 +213,7 @@ class MemoriesService {
 
 @Controller('memories')
 class MemoriesController {
-  constructor(private readonly memoriesService: MemoriesService) {}
+  constructor(@Inject(MemoriesService) private readonly memoriesService: MemoriesService) {}
 
   @Get()
   list(

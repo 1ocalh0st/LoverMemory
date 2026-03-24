@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Injectable, Module, Post, ServiceUnavailableException, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Inject, Injectable, Module, Post, ServiceUnavailableException, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { FileInterceptor } from '@nestjs/platform-express'
@@ -63,7 +63,7 @@ type UploadedImageFile = {
 
 @Injectable()
 class UploadsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   private s3Client() {
     const endpoint = getPublicS3Endpoint()
@@ -164,7 +164,7 @@ class UploadsService {
 
 @Controller('uploads')
 class UploadsController {
-  constructor(private readonly uploadsService: UploadsService) {}
+  constructor(@Inject(UploadsService) private readonly uploadsService: UploadsService) {}
 
   @Post('presign')
   presign(@CurrentUser() auth: AuthContext, @Body() body: UploadPresignDto) {

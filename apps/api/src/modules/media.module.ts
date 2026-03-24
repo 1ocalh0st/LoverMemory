@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Inject,
   Injectable,
   Module,
   NotFoundException,
@@ -28,7 +29,7 @@ async function streamToBuffer(stream: any) {
 
 @Injectable()
 class MediaService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   private s3Client() {
     return createS3Client()
@@ -91,7 +92,7 @@ class MediaService {
 
 @Controller('media')
 class MediaController {
-  constructor(private readonly mediaService: MediaService) {}
+  constructor(@Inject(MediaService) private readonly mediaService: MediaService) {}
 
   @Get('assets/:assetId')
   viewAsset(

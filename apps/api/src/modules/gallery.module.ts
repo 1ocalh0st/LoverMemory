@@ -1,4 +1,4 @@
-import { Controller, Get, Injectable, Module, Query } from '@nestjs/common'
+import { Controller, Get, Inject, Injectable, Module, Query } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service.js'
 import { CurrentUser } from '../security/current-user.decorator.js'
 import type { AuthContext } from '../security/request.types.js'
@@ -7,7 +7,7 @@ import { mapMemoryAsset } from '../common/mappers.js'
 
 @Injectable()
 class GalleryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async list(auth: AuthContext, page = 1, limit = 24) {
     const coupleSpaceId = requireCoupleSpace(auth)
@@ -56,7 +56,7 @@ class GalleryService {
 
 @Controller('gallery')
 class GalleryController {
-  constructor(private readonly galleryService: GalleryService) {}
+  constructor(@Inject(GalleryService) private readonly galleryService: GalleryService) {}
 
   @Get()
   list(@CurrentUser() auth: AuthContext, @Query('page') page?: string, @Query('limit') limit?: string) {

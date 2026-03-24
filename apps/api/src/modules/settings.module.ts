@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Injectable, Module, Patch } from '@nestjs/common'
+import { Body, Controller, Get, Inject, Injectable, Module, Patch } from '@nestjs/common'
 import { IsIn, IsOptional, IsString } from 'class-validator'
 import { PrismaService } from '../prisma/prisma.service.js'
 import { CurrentUser } from '../security/current-user.decorator.js'
@@ -29,7 +29,7 @@ class PreferencesDto {
 
 @Injectable()
 class SettingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async get(auth: AuthContext) {
     const user = await this.prisma.user.findUnique({
@@ -56,7 +56,7 @@ class SettingsService {
 
 @Controller('settings/preferences')
 class SettingsController {
-  constructor(private readonly settingsService: SettingsService) {}
+  constructor(@Inject(SettingsService) private readonly settingsService: SettingsService) {}
 
   @Get()
   get(@CurrentUser() auth: AuthContext) {

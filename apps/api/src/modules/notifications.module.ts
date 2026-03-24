@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Injectable, Module, Param, Patch, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Inject, Injectable, Module, Param, Patch, Post } from '@nestjs/common'
 import { IsNotEmpty, IsObject, IsString } from 'class-validator'
 import webPush from 'web-push'
 import { PrismaService } from '../prisma/prisma.service.js'
@@ -27,7 +27,7 @@ class PushSubscriptionDto {
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {
     if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_SUBJECT) {
       webPush.setVapidDetails(
         process.env.VAPID_SUBJECT,
@@ -94,7 +94,7 @@ export class NotificationsService {
 
 @Controller('notifications')
 class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(@Inject(NotificationsService) private readonly notificationsService: NotificationsService) {}
 
   @Get()
   list(@CurrentUser() auth: AuthContext) {

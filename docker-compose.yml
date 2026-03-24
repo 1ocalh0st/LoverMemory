@@ -22,7 +22,7 @@ services:
       RP_ORIGIN: http://localhost:8080
       DATABASE_URL: mysql://lovermemory:lovermemory@mysql:3306/lovermemory
       REDIS_URL: redis://redis:6379
-      S3_ENDPOINT: http://localhost:9000
+      S3_ENDPOINT: http://minio:9000
       S3_INTERNAL_ENDPOINT: http://minio:9000
       S3_REGION: auto
       S3_BUCKET: lovermemory
@@ -46,7 +46,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: mysql://lovermemory:lovermemory@mysql:3306/lovermemory
       REDIS_URL: redis://redis:6379
-      S3_ENDPOINT: http://localhost:9000
+      S3_ENDPOINT: http://minio:9000
       S3_INTERNAL_ENDPOINT: http://minio:9000
       S3_REGION: auto
       S3_BUCKET: lovermemory
@@ -70,7 +70,7 @@ services:
       MYSQL_PASSWORD: lovermemory
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
 
@@ -96,10 +96,7 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin &&
-      /usr/bin/mc mb -p local/lovermemory || true
-      "
+      /bin/sh -c " /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin && /usr/bin/mc mb -p local/lovermemory || true "
 
 volumes:
   mysql-data:

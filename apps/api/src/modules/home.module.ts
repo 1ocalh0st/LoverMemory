@@ -1,4 +1,4 @@
-import { Controller, Get, Injectable, Module } from '@nestjs/common'
+import { Controller, Get, Inject, Injectable, Module } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service.js'
 import { CurrentUser } from '../security/current-user.decorator.js'
 import type { AuthContext } from '../security/request.types.js'
@@ -8,7 +8,7 @@ import { mapMemory } from '../common/mappers.js'
 
 @Injectable()
 class HomeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async getDashboard(auth: AuthContext) {
     const coupleSpaceId = requireCoupleSpace(auth)
@@ -76,7 +76,7 @@ class HomeService {
 
 @Controller('home')
 class HomeController {
-  constructor(private readonly homeService: HomeService) {}
+  constructor(@Inject(HomeService) private readonly homeService: HomeService) {}
 
   @Get()
   get(@CurrentUser() auth: AuthContext) {

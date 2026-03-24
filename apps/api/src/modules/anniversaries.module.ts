@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Injectable, Module, Param, Patch, Post } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, Inject, Injectable, Module, Param, Patch, Post } from '@nestjs/common'
 import { IsArray, IsDateString, IsIn, IsOptional, IsString, MaxLength } from 'class-validator'
 import { PrismaService } from '../prisma/prisma.service.js'
 import { CurrentUser } from '../security/current-user.decorator.js'
@@ -29,7 +29,7 @@ class AnniversaryMutationDto {
 
 @Injectable()
 class AnniversariesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async list(auth: AuthContext) {
     const coupleSpaceId = requireCoupleSpace(auth)
@@ -89,7 +89,7 @@ class AnniversariesService {
 
 @Controller('anniversaries')
 class AnniversariesController {
-  constructor(private readonly anniversariesService: AnniversariesService) {}
+  constructor(@Inject(AnniversariesService) private readonly anniversariesService: AnniversariesService) {}
 
   @Get()
   list(@CurrentUser() auth: AuthContext) {

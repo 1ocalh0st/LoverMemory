@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Injectable, Module, Param, Patch, Post } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, Inject, Injectable, Module, Param, Patch, Post } from '@nestjs/common'
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
 import { PrismaService } from '../prisma/prisma.service.js'
 import { CurrentUser } from '../security/current-user.decorator.js'
@@ -35,7 +35,7 @@ class WishlistMutationDto {
 
 @Injectable()
 class WishlistService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async list(auth: AuthContext) {
     const coupleSpaceId = requireCoupleSpace(auth)
@@ -96,7 +96,7 @@ class WishlistService {
 
 @Controller('wishlist')
 class WishlistController {
-  constructor(private readonly wishlistService: WishlistService) {}
+  constructor(@Inject(WishlistService) private readonly wishlistService: WishlistService) {}
 
   @Get()
   list(@CurrentUser() auth: AuthContext) {

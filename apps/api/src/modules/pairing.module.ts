@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Injectable, Module, Post } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Get, Inject, Injectable, Module, Post } from '@nestjs/common'
 import { MembershipRole, MembershipStatus } from '@prisma/client'
 import { IsNotEmpty, IsString } from 'class-validator'
 import slugify from 'slugify'
@@ -16,7 +16,7 @@ class JoinPairDto {
 
 @Injectable()
 class PairingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   private async getStatusForUser(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -206,7 +206,7 @@ class PairingService {
 
 @Controller('pairing')
 class PairingController {
-  constructor(private readonly pairingService: PairingService) {}
+  constructor(@Inject(PairingService) private readonly pairingService: PairingService) {}
 
   @Get('status')
   status(@CurrentUser() auth: AuthContext) {
