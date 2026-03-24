@@ -11,7 +11,7 @@ COPY packages/shared/package.json packages/shared/package.json
 RUN npm install
 
 COPY . .
-RUN npm run build --workspace @lover-memory/worker
+RUN npm run build --workspace @lover-memory/api && npm run build --workspace @lover-memory/worker
 
 WORKDIR /app/apps/worker
 CMD ["node", "dist/index.js"]

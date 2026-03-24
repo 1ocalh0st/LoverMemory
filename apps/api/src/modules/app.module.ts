@@ -6,6 +6,7 @@ import { PairingModule } from './pairing.module.js'
 import { MemoriesModule } from './memories.module.js'
 import { UploadsModule } from './uploads.module.js'
 import { GalleryModule } from './gallery.module.js'
+import { MediaModule } from './media.module.js'
 import { AnniversariesModule } from './anniversaries.module.js'
 import { WishlistModule } from './wishlist.module.js'
 import { NotificationsModule } from './notifications.module.js'
@@ -24,6 +25,7 @@ import { CsrfGuard } from '../security/csrf.guard.js'
     MemoriesModule,
     UploadsModule,
     GalleryModule,
+    MediaModule,
     AnniversariesModule,
     WishlistModule,
     NotificationsModule,

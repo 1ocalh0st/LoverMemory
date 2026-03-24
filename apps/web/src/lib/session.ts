@@ -5,6 +5,7 @@ export interface SessionPayload {
   authenticated: boolean
   csrfToken: string
   vapidPublicKey: string | null
+  recoveryMode?: 'disabled' | 'preview'
   user?: {
     id: string
     email: string
@@ -40,22 +41,24 @@ export async function authGuard(
   const requiresAuth = to.meta.requiresAuth !== false
   const requiresPairing = to.meta.requiresPairing !== false
 
-  if (to.name === 'auth' && session.authenticated) {
-    next(session.user?.coupleSpaceId ? { name: 'home' } : { name: 'pairing' })
+  const isAuthenticated = session?.authenticated ?? false
+
+  if (to.name === 'auth' && isAuthenticated) {
+    next(session?.user?.coupleSpaceId ? { name: 'home' } : { name: 'pairing' })
     return
   }
 
-  if (requiresAuth && !session.authenticated) {
+  if (requiresAuth && !isAuthenticated) {
     next({ name: 'auth' })
     return
   }
 
-  if (session.authenticated && to.name !== 'pairing' && requiresPairing && !session.user?.coupleSpaceId) {
+  if (isAuthenticated && to.name !== 'pairing' && requiresPairing && !session?.user?.coupleSpaceId) {
     next({ name: 'pairing' })
     return
   }
 
-  if (to.name === 'pairing' && session.user?.coupleSpaceId) {
+  if (to.name === 'pairing' && session?.user?.coupleSpaceId) {
     next({ name: 'home' })
     return
   }

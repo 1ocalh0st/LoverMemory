@@ -1,12 +1,14 @@
-import { BadRequestException, Body, Controller, Injectable, Module, Post, ServiceUnavailableException } from '@nestjs/common'
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { BadRequestException, Body, Controller, Injectable, Module, Post, ServiceUnavailableException, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { IsInt, IsMimeType, IsOptional, IsString, Max, Min } from 'class-validator'
 import { PrismaService } from '../prisma/prisma.service.js'
 import { CurrentUser } from '../security/current-user.decorator.js'
 import type { AuthContext } from '../security/request.types.js'
 import { requireCoupleSpace } from '../common/space.guard.js'
 import { randomToken } from '../security/auth-utils.js'
+import { createS3Client, getAssetBaseUrl, getPublicS3Endpoint } from '../common/storage.js'
 
 class UploadPresignDto {
   @IsString()
@@ -52,23 +54,24 @@ class UploadCompleteDto {
   height?: number
 }
 
+type UploadedImageFile = {
+  originalname: string
+  mimetype: string
+  buffer: Buffer
+  size: number
+}
+
 @Injectable()
 class UploadsService {
   constructor(private readonly prisma: PrismaService) {}
 
   private s3Client() {
-    if (!process.env.S3_BUCKET || !process.env.S3_ENDPOINT) {
+    const endpoint = getPublicS3Endpoint()
+    if (!process.env.S3_BUCKET || !endpoint) {
       throw new ServiceUnavailableException('Object storage is not configured')
     }
-    return new S3Client({
-      region: process.env.S3_REGION ?? 'auto',
-      endpoint: process.env.S3_ENDPOINT,
-      credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY ?? '',
-        secretAccessKey: process.env.S3_SECRET_KEY ?? ''
-      },
-      forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true'
-    })
+
+    return createS3Client({ endpoint })
   }
 
   async presign(auth: AuthContext, input: UploadPresignDto) {
@@ -85,7 +88,7 @@ class UploadsService {
       ContentType: input.mimeType
     })
     const uploadUrl = await getSignedUrl(this.s3Client(), command, { expiresIn: 60 * 10 })
-    const publicUrlBase = process.env.ASSET_BASE_URL ?? `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}`
+    const publicUrlBase = getAssetBaseUrl()
 
     return {
       uploadUrl,
@@ -117,6 +120,46 @@ class UploadsService {
       asset
     }
   }
+
+  async directUpload(auth: AuthContext, file: UploadedImageFile) {
+    const coupleSpaceId = requireCoupleSpace(auth)
+    if (!file) {
+      throw new BadRequestException('Image file is required')
+    }
+    if (!file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('Only image uploads are supported')
+    }
+    if (!file.buffer?.length) {
+      throw new BadRequestException('Uploaded image is empty')
+    }
+
+    const extension = file.originalname.split('.').pop()?.toLowerCase() ?? 'jpg'
+    const storageKey = `${coupleSpaceId}/${auth.userId}/${Date.now()}-${randomToken(6)}.${extension}`
+    await createS3Client().send(
+      new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET!,
+        Key: storageKey,
+        Body: file.buffer,
+        ContentType: file.mimetype
+      })
+    )
+
+    const asset = await this.prisma.memoryAsset.create({
+      data: {
+        coupleSpaceId,
+        authorId: auth.userId,
+        storageKey,
+        originalUrl: `${getAssetBaseUrl()}/${storageKey}`,
+        mimeType: file.mimetype,
+        byteSize: file.size
+      }
+    })
+
+    return {
+      assetId: asset.id,
+      asset
+    }
+  }
 }
 
 @Controller('uploads')
@@ -131,6 +174,12 @@ class UploadsController {
   @Post('complete')
   complete(@CurrentUser() auth: AuthContext, @Body() body: UploadCompleteDto) {
     return this.uploadsService.complete(auth, body)
+  }
+
+  @Post('direct')
+  @UseInterceptors(FileInterceptor('file'))
+  direct(@CurrentUser() auth: AuthContext, @UploadedFile() file: UploadedImageFile) {
+    return this.uploadsService.directUpload(auth, file)
   }
 }
 

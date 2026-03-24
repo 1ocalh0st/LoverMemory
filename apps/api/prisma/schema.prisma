@@ -77,7 +77,7 @@ model User {
   id                        String                     @id @default(cuid())
   email                     String                     @unique
   displayName               String?
-  locale                    Locale                     @default(EN)
+  locale                    Locale                     @default(ZH)
   theme                     Theme                      @default(SYSTEM)
   timeFormat                TimeFormat                 @default(H24)
   timezone                  String                     @default("Asia/Shanghai")

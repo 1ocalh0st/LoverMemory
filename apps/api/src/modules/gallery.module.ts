@@ -17,13 +17,15 @@ class GalleryService {
       this.prisma.memoryAsset.count({
         where: {
           coupleSpaceId,
-          memoryId: { not: null }
+          memoryId: { not: null },
+          status: { not: 'FAILED' }
         }
       }),
       this.prisma.memoryAsset.findMany({
         where: {
           coupleSpaceId,
-          memoryId: { not: null }
+          memoryId: { not: null },
+          status: { not: 'FAILED' }
         },
         include: {
           memory: true

@@ -1,32 +1,32 @@
 <template>
   <div class="page">
-    <header class="page-header">
-      <h1>{{ t('wishlist.title') }}</h1>
-      <p>Track places to go, rituals to try, and promises you want to keep together.</p>
+    <header class="editorial-header">
+      <h1 class="display-lg">{{ t('wishlist.title') }}</h1>
+      <p class="body-lg">Track places to go, rituals to try, and promises you want to keep together.</p>
     </header>
 
-    <section class="glass section-card wishlist-form">
-      <input v-model="form.title" class="field" placeholder="Wishlist title" />
-      <select v-model="form.status" class="select">
+    <section class="section-card wishlist-form">
+      <input v-model="form.title" class="field ledger-style" placeholder="Wishlist title" />
+      <select v-model="form.status" class="select ledger-style">
         <option value="dreaming">Dreaming</option>
         <option value="planning">Planning</option>
         <option value="completed">Completed</option>
       </select>
-      <select v-model.number="form.priority" class="select">
+      <select v-model.number="form.priority" class="select ledger-style">
         <option :value="1">High priority</option>
         <option :value="2">Medium priority</option>
         <option :value="3">Low priority</option>
       </select>
-      <textarea v-model="form.note" class="textarea" rows="4" placeholder="Notes"></textarea>
+      <textarea v-model="form.note" class="textarea ledger-style" rows="4" placeholder="Notes"></textarea>
       <button class="button-primary" :disabled="saving" @click="save">{{ t('actions.addWishlist') }}</button>
     </section>
 
     <section v-if="wishlistQuery.data.value?.items.length" class="wishlist-columns">
-      <article v-for="item in wishlistQuery.data.value?.items" :key="item.id" class="glass section-card wishlist-card">
-        <small>{{ item.status }}</small>
-        <h2>{{ item.title }}</h2>
-        <p>{{ item.note }}</p>
-        <span>Priority {{ item.priority }}</span>
+      <article v-for="item in wishlistQuery.data.value?.items" :key="item.id" class="section-card wishlist-card">
+        <small class="meta-label">{{ item.status }}</small>
+        <h2 class="headline-md">{{ item.title }}</h2>
+        <p class="body-lg">{{ item.note }}</p>
+        <span class="meta-priority">Priority {{ item.priority }}</span>
       </article>
     </section>
     <div v-else class="empty-state">{{ t('wishlist.empty') }}</div>

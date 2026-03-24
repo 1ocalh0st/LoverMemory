@@ -120,42 +120,43 @@ async function logout() {
 .shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 1.25rem;
-  padding: 1.25rem;
+  grid-template-columns: 310px minmax(0, 1fr);
+  gap: 3rem;
+  padding: 2rem;
+  max-width: 1800px;
+  margin: 0 auto;
 }
 
 .shell-sidebar {
-  padding: 1.2rem;
-  border-radius: 34px;
+  padding: 2rem;
+  border-radius: var(--radius-xl);
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: 1.5rem;
+  gap: 2.5rem;
   position: sticky;
-  top: 1.25rem;
-  height: calc(100vh - 2.5rem);
+  top: 2rem;
+  height: calc(100vh - 4rem);
+  background: var(--surface-container-low);
+  box-shadow: none; /* No lines or hard shadows */
 }
 
 .brand-lockup {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 1.2rem;
 }
 
 .brand-badge {
   width: 56px;
   height: 56px;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, rgba(242, 109, 79, 0.28), rgba(82, 121, 255, 0.22));
-  font-weight: 700;
-  letter-spacing: -0.04em;
-}
-
-.brand-title {
-  font-size: 1.15rem;
-  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-fixed), var(--primary-container));
+  color: var(--on-primary-container);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .brand-subtitle {
@@ -166,71 +167,79 @@ async function logout() {
 
 .shell-nav {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.8rem;
   align-content: start;
 }
 
 .shell-nav-item {
-  padding: 0.9rem 1rem;
-  border-radius: 20px;
+  padding: 1rem 1.4rem;
+  border-radius: var(--radius-lg);
   color: var(--text-soft);
   display: grid;
-  gap: 0.15rem;
-  transition: transform 180ms ease, background 180ms ease, color 180ms ease;
+  gap: 0.2rem;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
 }
 
 .shell-nav-item.active,
 .shell-nav-item:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--surface-container-highest);
   color: var(--text);
-  transform: translateY(-1px);
+  transform: translateX(4px);
 }
 
 .shell-nav-item small {
-  opacity: 0.7;
+  opacity: 0.6;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
 .shell-sidebar-footer {
   display: grid;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .shell-main {
   min-width: 0;
   display: grid;
-  gap: 1rem;
+  grid-template-rows: auto 1fr;
+  gap: 2.5rem;
+  padding-bottom: 3rem;
 }
 
 .shell-header {
-  border-radius: 30px;
-  padding: 1rem 1.2rem;
+  border-radius: var(--radius-xl);
+  padding: 1.2rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--surface-container-low);
 }
 
 .shell-header-title {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.6rem;
+  font-family: var(--font-display);
 }
 
 .shell-header-subtitle {
   color: var(--text-soft);
   margin-top: 0.2rem;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
 .shell-header-actions {
   display: flex;
-  gap: 0.75rem;
-}
-
-.shell-content {
-  min-width: 0;
-  padding-bottom: 5rem;
+  gap: 1rem;
 }
 
 .small {
-  padding: 0.7rem 1rem;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
 }
 
 .shell-mobile-nav {
@@ -241,6 +250,7 @@ async function logout() {
   .shell {
     grid-template-columns: 1fr;
     padding: 1rem;
+    gap: 1.5rem;
   }
 
   .shell-sidebar {
@@ -251,40 +261,38 @@ async function logout() {
     position: sticky;
     top: 1rem;
     z-index: 5;
+    background: var(--bg-elevated);
+    backdrop-filter: blur(12px);
   }
 
   .shell-mobile-nav {
     position: fixed;
-    bottom: 1rem;
-    left: 1rem;
-    right: 1rem;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    right: 1.5rem;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0.4rem;
-    padding: 0.5rem;
-    border-radius: 999px;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: var(--radius-xl);
+    background: var(--bg-elevated);
+    backdrop-filter: blur(12px);
     z-index: 30;
+    box-shadow: var(--shadow-float);
   }
 
   .shell-mobile-link {
     text-align: center;
-    padding: 0.75rem 0.4rem;
-    font-size: 0.78rem;
+    padding: 0.75rem 0.2rem;
+    font-size: 0.75rem;
     color: var(--text-soft);
-    border-radius: 999px;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
   }
 
   .shell-mobile-link.active {
-    background: rgba(255, 255, 255, 0.22);
+    background: var(--surface-container-highest);
     color: var(--text);
-  }
-}
-
-@media (max-width: 720px) {
-  .shell-header {
-    align-items: flex-start;
-    gap: 0.8rem;
-    flex-direction: column;
   }
 }
 </style>

@@ -1,0 +1,2 @@
+ALTER TABLE `User`
+    ALTER COLUMN `locale` SET DEFAULT 'ZH';

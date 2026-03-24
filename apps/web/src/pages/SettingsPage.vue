@@ -1,22 +1,22 @@
 <template>
   <div class="page">
-    <header class="page-header">
-      <h1>{{ t('settings.title') }}</h1>
-      <p>Persist language, theme, time format, timezone, and push subscriptions to your private account.</p>
+    <header class="editorial-header">
+      <h1 class="display-lg">{{ t('settings.title') }}</h1>
+      <p class="body-lg">Persist language, theme, time format, timezone, and push subscriptions to your private account.</p>
     </header>
 
-    <section class="glass section-card settings-grid">
+    <section class="section-card settings-grid">
       <label>
-        <span>{{ t('settings.locale') }}</span>
-        <select v-model="form.locale" class="select">
+        <span class="settings-label">{{ t('settings.locale') }}</span>
+        <select v-model="form.locale" class="select ledger-style">
           <option value="en">English</option>
           <option value="zh">中文</option>
         </select>
       </label>
 
       <label>
-        <span>{{ t('settings.theme') }}</span>
-        <select v-model="form.theme" class="select">
+        <span class="settings-label">{{ t('settings.theme') }}</span>
+        <select v-model="form.theme" class="select ledger-style">
           <option value="system">System</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
@@ -24,16 +24,16 @@
       </label>
 
       <label>
-        <span>{{ t('settings.timeFormat') }}</span>
-        <select v-model="form.timeFormat" class="select">
+        <span class="settings-label">{{ t('settings.timeFormat') }}</span>
+        <select v-model="form.timeFormat" class="select ledger-style">
           <option value="24h">24h</option>
           <option value="12h">12h</option>
         </select>
       </label>
 
       <label>
-        <span>{{ t('settings.timezone') }}</span>
-        <input v-model="form.timezone" class="field" />
+        <span class="settings-label">{{ t('settings.timezone') }}</span>
+        <input v-model="form.timezone" class="field ledger-style" />
       </label>
 
       <div class="settings-actions">

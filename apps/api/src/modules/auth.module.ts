@@ -1,4 +1,17 @@
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Injectable, Module, Post, Res, UnauthorizedException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Injectable,
+  Module,
+  Post,
+  Res,
+  ServiceUnavailableException,
+  UnauthorizedException
+} from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
 import type { Response } from 'express'
@@ -80,6 +93,10 @@ class AuthService {
     return this.config.get('APP_NAME') ?? 'LoverMemory'
   }
 
+  private get recoveryMode() {
+    return process.env.NODE_ENV === 'production' ? 'disabled' : 'preview'
+  }
+
   async createSession(userId: string, response: Response, meta?: { userAgent?: string; ipAddress?: string }) {
     const sessionToken = randomToken(48)
     await this.prisma.session.create({
@@ -110,7 +127,7 @@ class AuthService {
           data: {
             email: input.email.toLowerCase(),
             displayName: input.displayName?.trim() || input.email.split('@')[0],
-            locale: prismaLocale(input.locale ?? 'en'),
+            locale: prismaLocale(input.locale ?? 'zh'),
             timezone: input.timezone ?? 'Asia/Shanghai'
           }
         })
@@ -345,6 +362,12 @@ class AuthService {
   }
 
   async requestRecovery(input: RecoveryRequestDto) {
+    if (this.recoveryMode !== 'preview') {
+      throw new ServiceUnavailableException(
+        'Recovery email is not available in this deployment yet. Sign in with a saved passkey, or use another device that already has access.'
+      )
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { email: input.email.toLowerCase() }
     })
@@ -387,7 +410,8 @@ class AuthService {
       return {
         authenticated: false,
         csrfToken,
-        vapidPublicKey: this.config.get('VAPID_PUBLIC_KEY') ?? null
+        vapidPublicKey: this.config.get('VAPID_PUBLIC_KEY') ?? null,
+        recoveryMode: this.recoveryMode
       }
     }
 
@@ -400,7 +424,8 @@ class AuthService {
       authenticated: true,
       user: mapSessionUser(user!),
       csrfToken,
-      vapidPublicKey: this.config.get('VAPID_PUBLIC_KEY') ?? null
+      vapidPublicKey: this.config.get('VAPID_PUBLIC_KEY') ?? null,
+      recoveryMode: this.recoveryMode
     }
   }
 }

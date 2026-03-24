@@ -14,6 +14,12 @@
         <p>{{ t('auth.subtitle') }}</p>
       </div>
 
+      <div class="auth-copy glass">
+        <strong>{{ t('auth.deviceTitle') }}</strong>
+        <p>{{ t('auth.deviceBody') }}</p>
+        <p class="auth-muted">{{ t('auth.loginHint') }}</p>
+      </div>
+
       <div class="auth-form-grid">
         <label>
           <span>{{ t('auth.name') }}</span>
@@ -32,8 +38,20 @@
 
       <details class="auth-recovery">
         <summary>{{ t('auth.recovery') }}</summary>
-        <button class="button-secondary" :disabled="busy" @click="handleRecovery">Send Recovery Preview</button>
-        <div v-if="recoveryPreview" class="auth-preview">Recovery token: {{ recoveryPreview }}</div>
+        <p>{{ t('auth.recoveryBody') }}</p>
+        <p v-if="recoveryMode === 'disabled'" class="auth-muted">{{ t('auth.recoveryDisabled') }}</p>
+        <p v-else class="auth-muted">{{ t('auth.recoveryPreview') }}</p>
+        <button
+          v-if="recoveryMode === 'preview'"
+          class="button-secondary"
+          :disabled="busy"
+          @click="handleRecovery"
+        >
+          {{ t('auth.recoveryAction') }}
+        </button>
+        <div v-if="recoveryPreview" class="auth-preview">
+          {{ t('auth.recoveryResult', { token: recoveryPreview }) }}
+        </div>
       </details>
 
       <p v-if="error" class="auth-error">{{ error }}</p>
@@ -48,7 +66,7 @@ import { useI18n } from 'vue-i18n'
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
 import { animate } from 'motion'
 import { api, ApiError } from '@/lib/api'
-import { clearSessionCache } from '@/lib/session'
+import { clearSessionCache, loadSession, type SessionPayload } from '@/lib/session'
 
 const router = useRouter()
 const { t, locale } = useI18n()
@@ -58,10 +76,21 @@ const displayName = ref('')
 const busy = ref(false)
 const error = ref('')
 const recoveryPreview = ref('')
+const recoveryMode = ref<SessionPayload['recoveryMode']>('disabled')
 
-onMounted(() => {
+onMounted(async () => {
   animate('.auth-card' as any, { opacity: [0, 1], y: [18, 0] } as any, { duration: 0.75 })
+  try {
+    const session = await loadSession()
+    recoveryMode.value = session.recoveryMode ?? 'disabled'
+  } catch {
+    recoveryMode.value = 'disabled'
+  }
 })
+
+function isBrowserAbort(cause: unknown) {
+  return cause instanceof Error && ['AbortError', 'NotAllowedError'].includes(cause.name)
+}
 
 async function finishSuccess(result: { needsPairing?: boolean }) {
   clearSessionCache()
@@ -91,7 +120,7 @@ async function handleRegister() {
     })
     await finishSuccess(result)
   } catch (cause) {
-    error.value = cause instanceof ApiError ? cause.message : 'Registration failed'
+    error.value = cause instanceof ApiError ? cause.message : isBrowserAbort(cause) ? t('auth.cancelled') : t('auth.registerFailed')
   } finally {
     busy.value = false
   }
@@ -117,7 +146,7 @@ async function handleLogin() {
     })
     await finishSuccess(result)
   } catch (cause) {
-    error.value = cause instanceof ApiError ? cause.message : 'Login failed'
+    error.value = cause instanceof ApiError ? cause.message : isBrowserAbort(cause) ? t('auth.cancelled') : t('auth.loginFailed')
   } finally {
     busy.value = false
   }
@@ -132,7 +161,7 @@ async function handleRecovery() {
       method: 'POST',
       body: JSON.stringify({ email: email.value })
     })
-    recoveryPreview.value = result.previewToken ?? 'Request accepted'
+    recoveryPreview.value = result.previewToken ?? ''
   } catch (cause) {
     error.value = cause instanceof ApiError ? cause.message : 'Recovery request failed'
   } finally {
@@ -200,20 +229,34 @@ async function handleRecovery() {
   align-content: center;
 }
 
-.auth-form-grid {
-  display: grid;
-  gap: 1rem;
-}
-
+.auth-copy,
 .auth-form-grid label,
 .auth-recovery {
   display: grid;
   gap: 0.55rem;
 }
 
+.auth-copy {
+  padding: 1rem 1.1rem;
+  border-radius: 24px;
+}
+
+.auth-copy p {
+  margin: 0;
+}
+
+.auth-form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
 .auth-actions {
   display: grid;
   gap: 0.75rem;
+}
+
+.auth-muted {
+  color: var(--text-soft);
 }
 
 .auth-error,

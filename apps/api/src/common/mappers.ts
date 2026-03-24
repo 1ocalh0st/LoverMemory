@@ -16,16 +16,18 @@ import {
   timeFormatFromPrisma,
   wishlistStatusFromPrisma
 } from './domain.js'
+import { assetMediaPath, assetVariantUrls } from './media.js'
 
 export function mapMemoryAsset(asset: MemoryAsset) {
+  const failed = asset.status === 'FAILED'
   return {
     id: asset.id,
-    originalUrl: asset.originalUrl,
+    originalUrl: failed ? '' : assetMediaPath(asset.id),
     mimeType: asset.mimeType,
     width: asset.width,
     height: asset.height,
     blurDataUrl: asset.blurDataUrl,
-    variants: (asset.variants as Record<string, string> | null) ?? null,
+    variants: failed ? null : assetVariantUrls(asset.id),
     isCover: asset.isCover,
     status: asset.status.toLowerCase()
   }

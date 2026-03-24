@@ -14,4 +14,4 @@ COPY . .
 RUN npm run build --workspace @lover-memory/shared && npm run build --workspace @lover-memory/api
 
 WORKDIR /app/apps/api
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]

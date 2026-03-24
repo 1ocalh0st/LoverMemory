@@ -7,12 +7,13 @@ const prisma = new PrismaClient()
 const pollIntervalMs = Number(process.env.WORKER_POLL_INTERVAL_MS ?? 60_000)
 
 function getS3Client() {
-  if (!process.env.S3_BUCKET || !process.env.S3_ENDPOINT) {
+  const endpoint = process.env.S3_INTERNAL_ENDPOINT ?? process.env.S3_ENDPOINT
+  if (!process.env.S3_BUCKET || !endpoint) {
     return null
   }
   return new S3Client({
     region: process.env.S3_REGION ?? 'auto',
-    endpoint: process.env.S3_ENDPOINT,
+    endpoint,
     credentials: {
       accessKeyId: process.env.S3_ACCESS_KEY ?? '',
       secretAccessKey: process.env.S3_SECRET_KEY ?? ''
@@ -120,7 +121,7 @@ async function processAsset(assetId: string) {
 
 async function processPendingAssets() {
   const assets = await prisma.memoryAsset.findMany({
-    where: { status: 'PENDING' },
+    where: { status: { in: ['PENDING', 'FAILED'] } },
     take: 4,
     orderBy: { createdAt: 'asc' }
   })

@@ -1,31 +1,31 @@
 <template>
   <div class="page">
-    <header class="page-header">
-      <h1>{{ t('anniversaries.title') }}</h1>
-      <p>Count up, count down, and schedule subtle reminders before each milestone lands.</p>
+    <header class="editorial-header">
+      <h1 class="display-lg">{{ t('anniversaries.title') }}</h1>
+      <p class="body-lg">Count up, count down, and schedule subtle reminders before each milestone lands.</p>
     </header>
 
-    <section class="glass section-card anniversary-form">
-      <input v-model="form.title" class="field" placeholder="Anniversary title" />
-      <input v-model="form.targetDate" class="field" type="date" />
-      <select v-model="form.type" class="select">
+    <section class="section-card anniversary-form">
+      <input v-model="form.title" class="field ledger-style" placeholder="Anniversary title" />
+      <input v-model="form.targetDate" class="field ledger-style" type="date" />
+      <select v-model="form.type" class="select ledger-style">
         <option value="countdown">Countdown</option>
         <option value="countup">Count up</option>
       </select>
-      <input v-model="form.reminderDays" class="field" placeholder="Reminder days, e.g. 30,7,1" />
-      <textarea v-model="form.note" class="textarea" rows="4" placeholder="Short note"></textarea>
+      <input v-model="form.reminderDays" class="field ledger-style" placeholder="Reminder days, e.g. 30,7,1" />
+      <textarea v-model="form.note" class="textarea ledger-style" rows="4" placeholder="Short note"></textarea>
       <button class="button-primary" :disabled="saving" @click="save">{{ t('actions.addAnniversary') }}</button>
     </section>
 
     <section v-if="anniversaryQuery.data.value?.items.length" class="anniversary-grid">
-      <article v-for="item in anniversaryQuery.data.value?.items" :key="item.id" class="glass section-card anniversary-card">
+      <article v-for="item in anniversaryQuery.data.value?.items" :key="item.id" class="section-card anniversary-card">
         <div>
-          <small>{{ item.type }}</small>
-          <h2>{{ item.title }}</h2>
+          <small class="meta-label">{{ item.type }}</small>
+          <h2 class="headline-md">{{ item.title }}</h2>
         </div>
-        <strong>{{ daysLeft(item.targetDate) }}</strong>
-        <p>{{ item.note }}</p>
-        <span>{{ new Date(item.targetDate).toLocaleDateString() }}</span>
+        <strong class="display-lg text-primary">{{ daysLeft(item.targetDate) }}</strong>
+        <p class="body-lg">{{ item.note }}</p>
+        <span class="meta-date">{{ new Date(item.targetDate).toLocaleDateString() }}</span>
       </article>
     </section>
     <div v-else class="empty-state">{{ t('anniversaries.empty') }}</div>
@@ -109,25 +109,42 @@ function daysLeft(targetDate: string) {
 .anniversary-form,
 .anniversary-grid {
   display: grid;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .anniversary-grid {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
-.anniversary-card h2,
+.anniversary-card {
+  display:flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.anniversary-card h2 {
+  margin: 0;
+  color: var(--primary);
+}
+
 .anniversary-card p {
-  margin: 0.45rem 0;
+  margin: 0;
 }
 
-.anniversary-card strong {
-  font-size: 2.2rem;
-  letter-spacing: -0.05em;
+.text-primary {
+  color: var(--primary);
+  line-height: 1;
 }
 
-.anniversary-card small,
-.anniversary-card span,
+.meta-label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.meta-date,
 .feedback {
   color: var(--text-soft);
 }

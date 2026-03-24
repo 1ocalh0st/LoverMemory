@@ -1,13 +1,13 @@
 <template>
-  <div class="page">
-    <header class="page-header">
-      <h1>{{ t('gallery.title') }}</h1>
-      <p>Preloaded image variants keep the masonry surface quick on mobile and crisp on desktop.</p>
+  <div class="page gallery-page">
+    <header class="page-header editorial-header">
+      <h1 class="display-lg">{{ t('gallery.title') }}</h1>
+      <p class="body-lg">Preloaded image variants keep the masonry surface quick on mobile and crisp on desktop.</p>
     </header>
 
-    <section v-if="galleryQuery.data.value?.items.length" class="gallery-columns">
+    <section v-if="galleryQuery.data.value?.items.length" class="gallery-masonry">
       <button
-        v-for="item in galleryQuery.data.value?.items"
+        v-for="(item, index) in galleryQuery.data.value?.items"
         :key="item.id"
         class="gallery-item glass"
         @click="active = item"
@@ -16,9 +16,14 @@
           :src="item.variants?.md || item.originalUrl"
           :alt="item.memory?.title || 'Gallery item'"
           loading="lazy"
+          :class="{
+            'radius-1': Number(index) % 3 === 0,
+            'radius-2': Number(index) % 3 === 1,
+            'radius-3': Number(index) % 3 === 2
+          }"
         />
         <div class="gallery-meta">
-          <strong>{{ item.memory?.title }}</strong>
+          <strong class="headline-md">{{ item.memory?.title }}</strong>
           <small>{{ item.memory ? new Date(item.memory.occurredAt).toLocaleDateString() : '' }}</small>
         </div>
       </button>
@@ -52,34 +57,90 @@ const galleryQuery = useQuery({
 </script>
 
 <style scoped>
-.gallery-columns {
-  columns: 3 280px;
-  column-gap: 1rem;
+.gallery-page {
+  gap: 3rem;
+}
+
+.editorial-header {
+  max-width: 800px;
+}
+
+.editorial-header h1 {
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.gallery-masonry {
+  columns: 3 320px;
+  column-gap: 2.5rem;
 }
 
 .gallery-item {
   width: 100%;
   border: none;
+  background: var(--surface-container-lowest);
+  box-shadow: var(--shadow-ambient);
   display: inline-grid;
-  gap: 0.8rem;
-  margin: 0 0 1rem;
-  padding: 0.8rem;
-  border-radius: 28px;
+  gap: 1.2rem;
+  margin: 0 0 2.5rem;
+  padding: 1.2rem;
+  border-radius: var(--radius-xl);
   text-align: left;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  break-inside: avoid;
+}
+
+.gallery-item:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-float);
 }
 
 .gallery-item img {
   width: 100%;
   display: block;
-  border-radius: 22px;
+  object-fit: cover;
 }
+
+/* Asymmetric Image Radii */
+.radius-1 { border-radius: var(--radius-sm) var(--radius-xl) var(--radius-md) var(--radius-xl); }
+.radius-2 { border-radius: var(--radius-xl) var(--radius-sm) var(--radius-xl) var(--radius-md); }
+.radius-3 { border-radius: var(--radius-lg) var(--radius-xl) var(--radius-sm) var(--radius-xl); }
 
 .gallery-meta {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.4rem;
+  padding: 0 0.5rem 0.5rem;
+}
+
+.gallery-meta strong {
+  font-size: 1.3rem; /* headline-md like */
+  color: var(--primary);
+  line-height: 1.2;
 }
 
 .gallery-meta small {
   color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .gallery-masonry {
+    columns: 2 200px;
+    column-gap: 1.5rem;
+  }
+  .gallery-item {
+    margin-bottom: 1.5rem;
+    padding: 0.8rem;
+    gap: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .gallery-masonry {
+    columns: 1 100%;
+  }
 }
 </style>
