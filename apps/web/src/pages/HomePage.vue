@@ -281,12 +281,39 @@ const featuredImage = computed(
     grid-template-columns: 1fr;
   }
   
+  .hero-image-wrapper {
+    height: 60vh;
+    min-height: 400px;
+    max-height: 500px;
+  }
+
   .hero-card {
     margin-right: 0;
-    margin-top: -3rem;
+    margin-top: -4rem;
     width: 95%;
     align-self: center;
-    padding: 1.8rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-page {
+    gap: 2.5rem;
+  }
+  
+  .recent-item {
+    grid-template-columns: 80px 1fr;
+    gap: 1rem;
+  }
+
+  .recent-item img {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .hero-card {
+    width: 90%;
+    margin-top: -3rem;
   }
 }
 </style>

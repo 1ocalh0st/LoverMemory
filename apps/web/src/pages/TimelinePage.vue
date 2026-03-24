@@ -576,4 +576,17 @@ function formatDate(value: string) {
     padding: 1.5rem;
   }
 }
+
+@media (max-width: 480px) {
+  .composer-overlay {
+    padding: 0;
+  }
+  .composer-container {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 1.5rem;
+  }
+}
 </style>

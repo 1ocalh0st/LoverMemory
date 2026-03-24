@@ -265,15 +265,19 @@ async function logout() {
     backdrop-filter: blur(12px);
   }
 
+  .shell-main {
+    padding-bottom: 5rem;
+  }
+
   .shell-mobile-nav {
     position: fixed;
-    bottom: 1.5rem;
-    left: 1.5rem;
-    right: 1.5rem;
+    bottom: 1rem;
+    left: 0.5rem;
+    right: 0.5rem;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0.5rem;
-    padding: 0.75rem;
+    gap: 0.3rem;
+    padding: 0.5rem;
     border-radius: var(--radius-xl);
     background: var(--bg-elevated);
     backdrop-filter: blur(12px);
@@ -283,8 +287,8 @@ async function logout() {
 
   .shell-mobile-link {
     text-align: center;
-    padding: 0.75rem 0.2rem;
-    font-size: 0.75rem;
+    padding: 0.6rem 0.1rem;
+    font-size: 0.7rem;
     color: var(--text-soft);
     border-radius: var(--radius-lg);
     font-weight: 600;
@@ -293,6 +297,17 @@ async function logout() {
   .shell-mobile-link.active {
     background: var(--surface-container-highest);
     color: var(--text);
+  }
+}
+
+@media (max-width: 480px) {
+  .shell {
+    padding: 0.5rem;
+    gap: 1rem;
+  }
+  .shell-header {
+    top: 0.5rem;
+    padding: 1rem 1.2rem;
   }
 }
 </style>

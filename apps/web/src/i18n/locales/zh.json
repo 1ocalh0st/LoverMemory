@@ -8,7 +8,7 @@
   "nav.settings": "设置",
   "auth.title": "只属于两个人的私密记忆舱",
   "auth.subtitle": "登录方式取决于你当前设备是否已经保存了这个网站的通行密钥。",
-  "auth.name": "显示名称",
+  "auth.name": "名称",
   "auth.email": "邮箱",
   "auth.register": "在当前设备创建通行密钥",
   "auth.login": "使用已绑定设备登录",
