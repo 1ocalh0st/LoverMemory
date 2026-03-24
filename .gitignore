@@ -16,3 +16,4 @@ apps/api/test-results/
 apps/web/.vite/
 apps/web/dev-dist/
 *.tsbuildinfo
+.codex-deploy.zip
