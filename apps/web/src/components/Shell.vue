@@ -162,6 +162,7 @@ async function logout() {
 
 <style scoped>
 .shell {
+  --mobile-shell-pad: clamp(0.75rem, 3vw, 1rem);
   min-height: 100vh;
   max-width: 1560px;
   margin: 0 auto;
@@ -383,7 +384,8 @@ async function logout() {
   .shell {
     min-height: 100svh;
     grid-template-columns: 1fr;
-    padding: clamp(0.75rem, 3vw, 1rem);
+    gap: 0.95rem;
+    padding: 0 var(--mobile-shell-pad);
   }
 
   .shell.immersive-gallery {
@@ -395,18 +397,34 @@ async function logout() {
   }
 
   .shell-main {
-    padding-bottom: calc(var(--safe-bottom) + 7.8rem);
+    gap: 0.95rem;
+    padding-bottom: calc(var(--safe-bottom) + 7.2rem);
   }
 
   .shell-header {
-    position: static;
-    top: auto;
-    padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin-inline: calc(var(--mobile-shell-pad) * -1);
+    padding: calc(var(--safe-top) + 0.8rem) calc(var(--mobile-shell-pad) + 0.1rem) 1rem;
     align-items: flex-start;
+    border-radius: 0 0 28px 28px;
+    border-top: 0;
+    background:
+      radial-gradient(circle at top left, rgba(255, 232, 220, 0.88), transparent 38%),
+      linear-gradient(180deg, rgba(255, 251, 247, 0.98), rgba(255, 245, 238, 0.9));
+    box-shadow: 0 16px 34px rgba(196, 164, 149, 0.16);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
   }
 
   .shell-header-title {
     font-size: clamp(2.1rem, 10vw, 2.9rem);
+  }
+
+  .shell-header-subtitle {
+    max-width: 18rem;
+    line-height: 1.45;
   }
 
   .desktop-actions {
@@ -435,16 +453,20 @@ async function logout() {
 
   .shell-mobile-nav {
     position: fixed;
-    left: 0.75rem;
-    right: 0.75rem;
-    bottom: 0.75rem;
+    left: calc(0.55rem + var(--safe-left));
+    right: calc(0.55rem + var(--safe-right));
+    bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px));
     z-index: 40;
-    padding: 0.5rem;
+    padding: 0.45rem;
     border-radius: 28px;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0.4rem;
     transform: translateZ(0);
+    background: rgba(255, 249, 244, 0.92);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    box-shadow: 0 18px 42px rgba(187, 150, 139, 0.18);
   }
 
   .shell-mobile-link {
@@ -472,17 +494,26 @@ async function logout() {
 
 @media (max-width: 640px) {
   .shell {
-    gap: 0.9rem;
+    gap: 0.75rem;
   }
 
   .shell-header {
-    border-radius: 26px;
+    padding-top: calc(var(--safe-top) + 0.7rem);
+    padding-bottom: 0.9rem;
+    border-radius: 0 0 26px 26px;
+  }
+
+  .shell-header-copy {
+    gap: 0.5rem;
+  }
+
+  .shell-header-subtitle {
+    font-size: 0.86rem;
   }
 
   .shell-mobile-nav {
-    left: 0.5rem;
-    right: 0.5rem;
-    bottom: 0.5rem;
+    left: calc(0.4rem + var(--safe-left));
+    right: calc(0.4rem + var(--safe-right));
   }
 }
 </style>

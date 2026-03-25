@@ -7,8 +7,6 @@ services:
       dockerfile: apps/web/Dockerfile
     ports:
       - "127.0.0.1:8080:80"
-    volumes:
-      - /var/www/LoverMemory/dist:/usr/share/nginx/html:ro
     depends_on:
       - api
     restart: unless-stopped

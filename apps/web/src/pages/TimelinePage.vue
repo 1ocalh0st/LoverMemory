@@ -66,13 +66,15 @@
         class="timeline-node"
         :class="[
           Number(idx) % 2 === 0 ? 'node-left' : 'node-right',
+          { 'timeline-node--continued': !shouldShowDate(memory, Number(idx)) },
           { 'memory-card--recent': recentMemoryAnnouncement?.id === memory.id }
         ]"
       >
         <!-- Date bubble on the axis -->
-        <div class="timeline-date-bubble">
+        <div v-if="shouldShowDate(memory, Number(idx))" class="timeline-date-bubble">
           <span>{{ formatDate(memory.occurredAt) }}</span>
         </div>
+        <div v-else class="timeline-node-marker" aria-hidden="true"></div>
 
         <!-- Card -->
         <div class="section-card memory-card">
@@ -136,6 +138,7 @@
             <div class="memory-meta">
               <div class="memory-meta-tags">
                 <span v-if="recentMemoryAnnouncement?.id === memory.id" class="memory-new-badge">{{ t('common.justAdded') }}</span>
+                <span class="memory-time">{{ formatTime(memory.occurredAt) }}</span>
                 <span v-if="memory.mood" class="memory-mood">{{ moodLabel(memory.mood) }}</span>
               </div>
             </div>
@@ -298,7 +301,7 @@ import { VueDatePicker } from '@vuepic/vue-datepicker'
 import LightboxModal from '@/components/LightboxModal.vue'
 import RecentMemoryNotice from '@/components/RecentMemoryNotice.vue'
 import { api, ApiError, resolveApiAssetUrl } from '@/lib/api'
-import { dateTimeLocalToIso, formatDateInAppTimeZone, getCurrentDateTimeLocalValue } from '@/lib/datetime'
+import { dateTimeLocalToIso, formatDateInAppTimeZone, getCurrentDateTimeLocalValue, getDatePartsInAppTimeZone } from '@/lib/datetime'
 import {
   clearRecentMemoryAnnouncement,
   readRecentMemoryAnnouncement,
@@ -541,6 +544,31 @@ async function saveMemory() {
 function formatDate(value: string) {
   return formatDateInAppTimeZone(value)
 }
+
+function formatTime(value: string) {
+  return formatDateInAppTimeZone(value, {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function dateGroupKey(value: string) {
+  const parts = getDatePartsInAppTimeZone(value)
+  return parts ? `${parts.year}-${parts.month}-${parts.day}` : value
+}
+
+function shouldShowDate(memory: any, index: number) {
+  if (index === 0) {
+    return true
+  }
+
+  const previous = memoriesQuery.data.value?.items?.[index - 1]
+  if (!previous) {
+    return true
+  }
+
+  return dateGroupKey(memory.occurredAt) !== dateGroupKey(previous.occurredAt)
+}
 </script>
 
 <style scoped>
@@ -625,7 +653,7 @@ function formatDate(value: string) {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding-block: 2rem;
+  padding-block: 1.7rem 1.1rem;
 }
 
 .timeline-axis {
@@ -644,8 +672,8 @@ function formatDate(value: string) {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: start;
-  gap: 1.8rem;
-  padding-block: 1.4rem;
+  gap: 1.5rem;
+  padding-block: 1.1rem 1.3rem;
 }
 
 .timeline-date-bubble {
@@ -665,6 +693,22 @@ function formatDate(value: string) {
   font-size: 0.82rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
+}
+
+.timeline-node-marker {
+  grid-column: 2;
+  grid-row: 1;
+  z-index: 2;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 999px;
+  justify-self: center;
+  align-self: start;
+  margin-top: 0.85rem;
+  background: linear-gradient(135deg, #c68486 0%, #efb7ab 100%);
+  box-shadow:
+    0 10px 22px rgba(181, 127, 120, 0.18),
+    0 0 0 4px rgba(255, 249, 244, 0.92);
 }
 
 .timeline-node .memory-card {
@@ -834,6 +878,7 @@ function formatDate(value: string) {
   letter-spacing: 0.02em;
 }
 
+.memory-time,
 .memory-mood,
 .memory-location {
   display: inline-flex;
@@ -848,6 +893,12 @@ function formatDate(value: string) {
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.memory-time {
+  color: var(--accent-strong);
+  background: rgba(255, 242, 235, 0.88);
+  letter-spacing: 0.06em;
 }
 
 .memory-new-badge {
@@ -1042,42 +1093,102 @@ function formatDate(value: string) {
 }
 
 @media (max-width: 980px) {
+  .timeline-page {
+    gap: 1rem;
+  }
+
+  .timeline-controls {
+    gap: 0.95rem;
+  }
+
   .timeline-river {
-    padding-left: 2.2rem;
+    padding: 0.35rem 0 0.55rem;
   }
 
   .timeline-axis {
-    left: 0.65rem;
+    left: 0.55rem;
+    width: 1px;
   }
 
   .timeline-node {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 1.2rem;
+    grid-template-columns: 1fr;
+    gap: 0.72rem;
+    padding-block: 0 0.95rem;
   }
 
   .timeline-date-bubble {
     grid-column: 1;
     grid-row: 1;
+    justify-self: start;
+    margin-left: 1.35rem;
+    padding: 0.46rem 0.82rem;
+    font-size: 0.74rem;
+  }
+
+  .timeline-node-marker {
+    grid-column: 1;
+    justify-self: start;
+    margin-left: 0.1rem;
+    margin-top: 0.62rem;
   }
 
   .node-left .memory-card,
   .node-right .memory-card {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: stretch;
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: end;
     max-width: none;
+    width: calc(100% - 1.45rem);
+    margin-left: 1.45rem;
+  }
+
+  .memory-card {
+    gap: 0.85rem;
+    padding: 0.95rem;
+  }
+
+  .memory-card-body {
+    gap: 0.65rem;
+  }
+
+  .memory-meta-tags {
+    justify-content: flex-start;
+    gap: 0.45rem;
   }
 }
 
 @media (max-width: 640px) {
+  .timeline-page {
+    gap: 0.85rem;
+  }
+
+  .timeline-controls {
+    padding: 1rem;
+    border-radius: 24px;
+  }
+
+  .timeline-date-bubble {
+    margin-left: 1.18rem;
+  }
+
+  .node-left .memory-card,
+  .node-right .memory-card {
+    width: calc(100% - 1.22rem);
+    margin-left: 1.22rem;
+  }
+
+  .memory-card {
+    border-radius: 26px;
+  }
+
   .memory-cover {
-    padding-right: 1rem;
-    padding-bottom: 1rem;
+    padding-right: 0.9rem;
+    padding-bottom: 0.92rem;
   }
 
   .memory-cover-layer {
-    width: calc(100% - 1rem);
-    height: calc(100% - 1rem);
+    width: calc(100% - 0.92rem);
+    height: calc(100% - 0.92rem);
     border-radius: 22px;
   }
 

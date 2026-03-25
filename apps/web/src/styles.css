@@ -40,7 +40,10 @@
   --font-display: "Cormorant Garamond", "Noto Serif SC", "Songti SC", "STSong", serif;
   --font-text: "Manrope", "PingFang SC", "Microsoft YaHei", sans-serif;
   --page-gutter: clamp(1rem, 2vw, 1.6rem);
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
   --page-glow-1: rgba(255, 223, 205, 0.92);
   --page-glow-2: rgba(255, 240, 227, 0.88);
   --page-base-top: #fffaf5;
