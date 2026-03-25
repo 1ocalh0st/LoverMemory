@@ -45,3 +45,20 @@ jobs:
           REMOTE_HOST: ${{ secrets.SERVER_IP }}
           REMOTE_USER: ${{ secrets.SERVER_USER }}
           TARGET: "/var/www/LoverMemory/dist"
+
+      - name: Refresh Running Web Container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            WEB_CONTAINER=$(docker ps --filter "label=com.docker.compose.service=web" --format '{{.Names}}' | head -n 1)
+            if [ -z "$WEB_CONTAINER" ]; then
+              echo "web container not found"
+              exit 1
+            fi
+            docker exec "$WEB_CONTAINER" sh -lc 'rm -rf /usr/share/nginx/html/assets /usr/share/nginx/html/pictures /usr/share/nginx/html/favicon.svg /usr/share/nginx/html/icons.svg /usr/share/nginx/html/index.html /usr/share/nginx/html/manifest.webmanifest /usr/share/nginx/html/sw.js /usr/share/nginx/html/workbox-*.js'
+            docker cp /var/www/LoverMemory/dist/. "$WEB_CONTAINER":/usr/share/nginx/html/
+            docker exec "$WEB_CONTAINER" sh -lc 'stat /usr/share/nginx/html/index.html && sed -n "1,12p" /usr/share/nginx/html/index.html'
