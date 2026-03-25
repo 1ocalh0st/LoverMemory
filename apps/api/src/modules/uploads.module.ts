@@ -177,7 +177,13 @@ class UploadsController {
   }
 
   @Post('direct')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 50_000_000
+      }
+    })
+  )
   direct(@CurrentUser() auth: AuthContext, @UploadedFile() file: UploadedImageFile) {
     return this.uploadsService.directUpload(auth, file)
   }

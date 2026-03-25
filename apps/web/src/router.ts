@@ -17,6 +17,12 @@ export const router = createRouter({
       component: () => import('./pages/PairingPage.vue')
     },
     {
+      path: '/invite',
+      name: 'invite',
+      meta: { requiresAuth: true, requiresPairing: false },
+      component: () => import('./pages/InvitePage.vue')
+    },
+    {
       path: '/',
       component: () => import('./components/Shell.vue'),
       children: [
