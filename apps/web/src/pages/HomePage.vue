@@ -71,9 +71,12 @@
             v-for="memory in homeQuery.data.value?.recentMemories"
             :key="memory.id"
             class="recent-item"
-            :class="{ 'recent-item--new': recentMemoryAnnouncement?.id === memory.id }"
+            :class="{
+              'recent-item--new': recentMemoryAnnouncement?.id === memory.id,
+              'recent-item--text-only': !getRecentMemoryCoverSrc(memory)
+            }"
           >
-            <img :src="resolveApiAssetUrl(memory.coverAsset?.originalUrl) || '/pictures/coffee.jpg'" :alt="memory.title" />
+            <img v-if="getRecentMemoryCoverSrc(memory)" :src="getRecentMemoryCoverSrc(memory)" :alt="memory.title" />
             <div class="recent-item-copy">
               <div class="recent-item-title">
                 <strong>{{ memory.title }}</strong>
@@ -114,6 +117,10 @@ const featuredImage = computed(
     resolveApiAssetUrl(homeQuery.data.value?.featuredMemory?.coverAsset?.originalUrl) ||
     '/pictures/fujimountain.jpg'
 )
+
+function getRecentMemoryCoverSrc(memory: any) {
+  return resolveApiAssetUrl(memory?.coverAsset?.variants?.sm) || resolveApiAssetUrl(memory?.coverAsset?.originalUrl)
+}
 
 function goToTimeline() {
   router.push({ name: 'timeline' })
@@ -220,6 +227,10 @@ function formatMemoryDate(value: string) {
   align-items: center;
   padding: 0.55rem;
   border-radius: 20px;
+}
+
+.recent-item--text-only {
+  grid-template-columns: 1fr;
 }
 
 .recent-item--new {

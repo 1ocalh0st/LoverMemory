@@ -1,6 +1,6 @@
 <template>
-  <article class="section-card recent-memory-notice">
-    <div class="recent-memory-media">
+  <article class="section-card recent-memory-notice" :class="{ 'recent-memory-notice--text-only': !coverSrc }">
+    <div v-if="coverSrc" class="recent-memory-media">
       <img :src="coverSrc" :alt="memory.title" loading="lazy" decoding="async" />
     </div>
 
@@ -50,7 +50,7 @@ const props = withDefaults(
 
 const { t } = useI18n()
 
-const coverSrc = computed(() => resolveApiAssetUrl(props.memory.coverPath) || '/pictures/coffee.jpg')
+const coverSrc = computed(() => resolveApiAssetUrl(props.memory.coverPath))
 const formattedDate = computed(() => formatDateInAppTimeZone(props.memory.occurredAt))
 </script>
 
@@ -60,6 +60,10 @@ const formattedDate = computed(() => formatDateInAppTimeZone(props.memory.occurr
   gap: 1rem;
   grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
   align-items: stretch;
+}
+
+.recent-memory-notice--text-only {
+  grid-template-columns: 1fr;
 }
 
 .recent-memory-notice::before {

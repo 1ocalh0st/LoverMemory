@@ -6,4 +6,8 @@ node_modules
 .vscode
 coverage
 *.log
+output
+api_output.txt
+worker_output.txt
+vite*.log
 .env
