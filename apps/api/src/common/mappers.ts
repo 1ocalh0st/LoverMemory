@@ -41,7 +41,7 @@ export function mapMemory(memory: Memory & { assets?: MemoryAsset[]; coverAsset?
     story: memory.story,
     occurredAt: memory.occurredAt.toISOString(),
     sortAt: memory.sortAt.toISOString(),
-    mood: moodFromPrisma(memory.mood),
+    mood: memory.customMood?.trim() || moodFromPrisma(memory.mood),
     locationName: memory.locationName,
     latitude: memory.latitude ? Number(memory.latitude) : null,
     longitude: memory.longitude ? Number(memory.longitude) : null,

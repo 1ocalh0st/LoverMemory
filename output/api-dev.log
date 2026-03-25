@@ -1,0 +1,67 @@
+
+> @lover-memory/api@1.0.0 dev
+> tsx watch src/main.ts
+
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +14ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +4ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPairingModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMemoriesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mGalleryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMediaModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAnniversariesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mWishlistModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mNotificationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSettingsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mHomeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUploadsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api}:[39m[38;5;3m +23ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/session, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/passkeys/register/start, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/passkeys/register/finish, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:37 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/passkeys/login/start, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/passkeys/login/finish, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/recovery/request, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/recovery/verify, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/session, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPairingController {/api/pairing}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pairing/status, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pairing/invite, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/pairing/join, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMemoriesController {/api/memories}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/memories, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/memories, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/memories/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/memories/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUploadsController {/api/uploads}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/uploads/presign, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/uploads/complete, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/uploads/direct, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mGalleryController {/api/gallery}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/gallery, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMediaController {/api/media}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/media/assets/:assetId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAnniversariesController {/api/anniversaries}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/anniversaries, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/anniversaries, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/anniversaries/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/anniversaries/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWishlistController {/api/wishlist}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/wishlist, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/wishlist, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/wishlist/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/wishlist/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNotificationsController {/api/notifications}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/subscriptions, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/subscriptions, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/:id/read, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSettingsController {/api/settings/preferences}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/preferences, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/preferences, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHomeController {/api/home}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/home, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 14044  - [39m2026/03/25 20:57:38 [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +15ms[39m

@@ -18,7 +18,16 @@ import { generateAuthenticationOptions, generateRegistrationOptions, verifyAuthe
 import type { Response } from 'express'
 import { IsEmail, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator'
 import { PrismaService } from '../prisma/prisma.service.js'
-import { cookieOptions, randomToken, sha256 } from '../security/auth-utils.js'
+import {
+  SESSION_MAX_AGE_MS,
+  clearCookieOptions,
+  cookieOptions,
+  normalizeDisplayName,
+  normalizeEmail,
+  parseLoginIdentifier,
+  randomToken,
+  sha256
+} from '../security/auth-utils.js'
 import { CurrentUser } from '../security/current-user.decorator.js'
 import { Public } from '../security/public.decorator.js'
 import type { AuthContext } from '../security/request.types.js'
@@ -29,10 +38,10 @@ class RegisterStartDto {
   @IsEmail()
   email!: string
 
-  @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(80)
-  displayName?: string
+  displayName!: string
 
   @IsOptional()
   @IsString()
@@ -52,13 +61,15 @@ class RegisterFinishDto {
 }
 
 class LoginStartDto {
-  @IsEmail()
-  email!: string
+  @IsString()
+  @IsNotEmpty()
+  identifier!: string
 }
 
 class LoginFinishDto {
-  @IsEmail()
-  email!: string
+  @IsString()
+  @IsNotEmpty()
+  identifier!: string
 
   @IsObject()
   credential!: Record<string, unknown>
@@ -98,6 +109,36 @@ class AuthService {
     return process.env.NODE_ENV === 'production' ? 'disabled' : 'preview'
   }
 
+  private async findUniqueUserByDisplayName(displayName: string, include?: Record<string, unknown>): Promise<any> {
+    const users = await this.prisma.user.findMany({
+      where: { displayName },
+      include: include as any,
+      take: 2
+    })
+
+    if (users.length > 1) {
+      throw new BadRequestException('This display name is not unique, please sign in with email')
+    }
+
+    return users[0] ?? null
+  }
+
+  private async findUserForLogin(identifier: string, include?: Record<string, unknown>): Promise<any> {
+    const parsed = parseLoginIdentifier(identifier)
+    if (!parsed.value) {
+      throw new BadRequestException('Name or email is required')
+    }
+
+    if (parsed.isEmail) {
+      return this.prisma.user.findUnique({
+        where: { email: parsed.value },
+        include: include as any
+      })
+    }
+
+    return this.findUniqueUserByDisplayName(parsed.value, include)
+  }
+
   async createSession(userId: string, response: Response, meta?: { userAgent?: string; ipAddress?: string }) {
     const sessionToken = randomToken(48)
     await this.prisma.session.create({
@@ -106,28 +147,54 @@ class AuthService {
         tokenHash: sha256(sessionToken),
         userAgent: meta?.userAgent,
         ipAddress: meta?.ipAddress,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
+        expiresAt: new Date(Date.now() + SESSION_MAX_AGE_MS)
       }
     })
     response.cookie('lm_session', sessionToken, cookieOptions(true))
   }
 
   async registerStart(input: RegisterStartDto) {
+    const email = normalizeEmail(input.email)
+    const displayName = normalizeDisplayName(input.displayName)
+
+    if (!displayName) {
+      throw new BadRequestException('Display name is required')
+    }
+
     const existing = await this.prisma.user.findUnique({
-      where: { email: input.email.toLowerCase() },
+      where: { email },
       include: { passkeys: true }
     })
+
+    const existingDisplayName = await this.prisma.user.findFirst({
+      where: {
+        displayName,
+        NOT: { email }
+      },
+      select: { id: true }
+    })
+
+    if (existingDisplayName) {
+      throw new BadRequestException('Display name is already in use')
+    }
 
     if (existing && existing.passkeys.length > 0) {
       throw new BadRequestException('Account already exists, please sign in')
     }
 
     const user = existing
-      ? existing
+      ? await this.prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            displayName,
+            locale: prismaLocale(input.locale ?? 'zh'),
+            timezone: input.timezone ?? 'Asia/Shanghai'
+          }
+        })
       : await this.prisma.user.create({
           data: {
-            email: input.email.toLowerCase(),
-            displayName: input.displayName?.trim() || input.email.split('@')[0],
+            email,
+            displayName,
             locale: prismaLocale(input.locale ?? 'zh'),
             timezone: input.timezone ?? 'Asia/Shanghai'
           }
@@ -176,7 +243,7 @@ class AuthService {
 
   async registerFinish(input: RegisterFinishDto, response: Response, meta?: { userAgent?: string; ipAddress?: string }) {
     const user = await this.prisma.user.findUnique({
-      where: { email: input.email.toLowerCase() },
+      where: { email: normalizeEmail(input.email) },
       include: { authChallenges: true, membership: true }
     })
 
@@ -242,13 +309,10 @@ class AuthService {
   }
 
   async loginStart(input: LoginStartDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: input.email.toLowerCase() },
-      include: { passkeys: true }
-    })
+    const user = await this.findUserForLogin(input.identifier, { passkeys: true })
 
     if (!user || user.passkeys.length === 0) {
-      throw new BadRequestException('No passkey found for this email')
+      throw new BadRequestException('No passkey found for this name or email')
     }
 
     const options = await generateAuthenticationOptions({
@@ -285,9 +349,10 @@ class AuthService {
   }
 
   async loginFinish(input: LoginFinishDto, response: Response, meta?: { userAgent?: string; ipAddress?: string }) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: input.email.toLowerCase() },
-      include: { passkeys: true, authChallenges: true, membership: true }
+    const user = await this.findUserForLogin(input.identifier, {
+      passkeys: true,
+      authChallenges: true,
+      membership: true
     })
 
     if (!user) {
@@ -359,7 +424,7 @@ class AuthService {
     await this.prisma.session.deleteMany({
       where: { userId }
     })
-    response.clearCookie('lm_session', cookieOptions(true))
+    response.clearCookie('lm_session', clearCookieOptions(true))
   }
 
   async requestRecovery(input: RecoveryRequestDto) {
@@ -370,7 +435,7 @@ class AuthService {
     }
 
     const user = await this.prisma.user.findUnique({
-      where: { email: input.email.toLowerCase() }
+      where: { email: normalizeEmail(input.email) }
     })
 
     if (!user) {

@@ -6,7 +6,7 @@
   "nav.anniversaries": "纪念日",
   "nav.wishlist": "愿望清单",
   "nav.settings": "设置",
-  "auth.title": "只属于两个人的私密记忆舱",
+  "auth.title": "只属于两个人的私密记忆",
   "auth.subtitle": "登录方式取决于你当前设备是否已经保存了这个网站的通行密钥。",
   "auth.name": "名称",
   "auth.email": "邮箱",
@@ -29,7 +29,7 @@
   "pairing.create": "创建邀请码",
   "pairing.join": "加入空间",
   "pairing.code": "邀请码",
-  "home.welcome": "你们的共享记忆舱",
+  "home.welcome": "你们的共享记忆",
   "home.empty": "还没有任何回忆。记录第一段时刻，让时间开始流动。",
   "home.stats.memories": "回忆数",
   "home.stats.anniversaries": "纪念日",
@@ -59,5 +59,14 @@
   "common.nextAnniversary": "下一个纪念日",
   "common.recentMemories": "最近回忆",
   "common.featuredMemory": "精选时刻",
-  "common.daysLeft": "还有 {count} 天"
+  "common.daysLeft": "还有 {count} 天",
+  "common.justAdded": "刚刚新增",
+  "common.dismiss": "知道了",
+  "common.viewTimeline": "查看时光轴",
+  "common.photoCount": "{count} 张照片",
+  "home.recentlyAddedNote": "这条回忆现在会明确出现在首页，不再静默保存。",
+  "home.recentlyAddedFallback": "最新保存的回忆已经出现在这里，可以继续回看或前往时光轴。",
+  "timeline.recentlyAddedNote": "这条回忆已经保存到时光轴，下面命中的卡片会同步高亮。",
+  "timeline.recentlyAddedFallback": "最新保存的回忆已经进入时光轴，不会再悄悄消失在界面里。",
+  "settings.displayName": "显示名称"
 }

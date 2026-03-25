@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node -e \"if (process.version === 'v22.21.0') { console.error('Node.js v22.21.0 has a known HTTPS+Vite crash. Use v22.21.1+ or v22.20.0.'); process.exit(1) }\"",
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "test": "vitest run"
@@ -11,6 +12,7 @@
   "dependencies": {
     "@simplewebauthn/browser": "^13.1.0",
     "@tanstack/vue-query": "^5.90.5",
+    "@vuepic/vue-datepicker": "^12.1.0",
     "motion": "^12.23.24",
     "vue": "^3.5.30",
     "vue-i18n": "^11.1.12",
@@ -21,6 +23,7 @@
     "@vue/tsconfig": "^0.8.1",
     "typescript": "^5.9.3",
     "vite": "^7.1.7",
+    "vite-plugin-mkcert": "^1.17.10",
     "vite-plugin-pwa": "^1.1.0",
     "vitest": "^3.2.4",
     "vue-tsc": "^3.1.1"

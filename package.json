@@ -17,6 +17,6 @@
     "test:web": "npm run test --workspace @lover-memory/web"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.0.0 <22.21.0 || >=22.21.1"
   }
 }

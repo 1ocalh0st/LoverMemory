@@ -25,6 +25,10 @@ class PreferencesDto {
   @IsOptional()
   @IsString()
   timezone?: string
+
+  @IsOptional()
+  @IsString()
+  displayName?: string
 }
 
 @Injectable()
@@ -46,7 +50,8 @@ class SettingsService {
         locale: input.locale ? prismaLocale(input.locale) : undefined,
         theme: input.theme ? prismaTheme(input.theme) : undefined,
         timeFormat: input.timeFormat ? prismaTimeFormat(input.timeFormat) : undefined,
-        timezone: input.timezone
+        timezone: input.timezone,
+        displayName: input.displayName
       },
       include: { membership: true }
     })

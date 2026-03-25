@@ -58,6 +58,15 @@
   "common.loading": "Loading",
   "common.nextAnniversary": "Next anniversary",
   "common.recentMemories": "Recent memories",
-  "common.featuredMemory": "Featured memory",
-  "common.daysLeft": "{count} days left"
+  "common.featuredMemory": "Featured moment",
+  "common.daysLeft": "{count} days left",
+  "common.justAdded": "Just added",
+  "common.dismiss": "Dismiss",
+  "common.viewTimeline": "View timeline",
+  "common.photoCount": "{count} photos",
+  "home.recentlyAddedNote": "This memory now shows up on the home screen instead of saving silently.",
+  "home.recentlyAddedFallback": "Your latest saved memory is visible here now, and you can jump back to the timeline anytime.",
+  "timeline.recentlyAddedNote": "This memory has been saved to the timeline, and matching cards below are highlighted.",
+  "timeline.recentlyAddedFallback": "Your latest saved memory is now visible in the timeline instead of disappearing quietly.",
+  "settings.displayName": "Display Name"
 }

@@ -1,5 +1,7 @@
 import { AnniversaryType, Locale, Mood, Theme, TimeFormat, WishlistStatus } from '@prisma/client'
 
+export const KNOWN_MOOD_VALUES = ['romantic', 'happy', 'peaceful', 'excited', 'nostalgic', 'grateful', 'tender'] as const
+
 export function prismaLocale(value: string) {
   return value === 'zh' ? Locale.ZH : Locale.EN
 }
@@ -49,6 +51,10 @@ export function prismaMood(value: string) {
     tender: Mood.TENDER
   }
   return map[value] ?? Mood.TENDER
+}
+
+export function isKnownMoodValue(value?: string | null) {
+  return Boolean(value && KNOWN_MOOD_VALUES.includes(value as (typeof KNOWN_MOOD_VALUES)[number]))
 }
 
 export function moodFromPrisma(value: Mood) {

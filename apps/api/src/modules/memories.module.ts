@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service.js'
 import { CurrentUser } from '../security/current-user.decorator.js'
 import type { AuthContext } from '../security/request.types.js'
 import { mapMemory } from '../common/mappers.js'
-import { prismaMood } from '../common/domain.js'
+import { isKnownMoodValue, prismaMood } from '../common/domain.js'
 import { requireCoupleSpace } from '../common/space.guard.js'
 
 class MemoryMutationDto {
@@ -21,6 +21,11 @@ class MemoryMutationDto {
   @IsString()
   @IsIn(['romantic', 'happy', 'peaceful', 'excited', 'nostalgic', 'grateful', 'tender'])
   mood!: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  customMood?: string
 
   @IsOptional()
   @IsString()
@@ -50,10 +55,15 @@ class MemoriesService {
 
   async list(auth: AuthContext, query: { q?: string; mood?: string; from?: string; to?: string }) {
     const coupleSpaceId = requireCoupleSpace(auth)
+    const moodFilter = query.mood
+      ? isKnownMoodValue(query.mood)
+        ? { mood: prismaMood(query.mood) }
+        : { customMood: { contains: query.mood } }
+      : {}
     const memories = await this.prisma.memory.findMany({
       where: {
         coupleSpaceId,
-        mood: query.mood ? prismaMood(query.mood) : undefined,
+        ...moodFilter,
         occurredAt: {
           gte: query.from ? new Date(query.from) : undefined,
           lte: query.to ? new Date(query.to) : undefined
@@ -62,7 +72,8 @@ class MemoriesService {
           ? [
               { title: { contains: query.q } },
               { story: { contains: query.q } },
-              { locationName: { contains: query.q } }
+              { locationName: { contains: query.q } },
+              { customMood: { contains: query.q } }
             ]
           : undefined
       },
@@ -106,6 +117,7 @@ class MemoriesService {
         occurredAt,
         sortAt: occurredAt,
         mood: prismaMood(input.mood),
+        customMood: normalizeCustomMood(input.customMood),
         locationName: input.locationName,
         latitude: input.latitude,
         longitude: input.longitude,
@@ -170,6 +182,7 @@ class MemoriesService {
         occurredAt: input.occurredAt ? new Date(input.occurredAt) : undefined,
         sortAt: input.occurredAt ? new Date(input.occurredAt) : undefined,
         mood: input.mood ? prismaMood(input.mood) : undefined,
+        customMood: input.customMood === undefined ? undefined : normalizeCustomMood(input.customMood),
         locationName: input.locationName,
         latitude: input.latitude,
         longitude: input.longitude,
@@ -209,6 +222,11 @@ class MemoriesService {
     }
     return mapMemory(memory)
   }
+}
+
+function normalizeCustomMood(value?: string | null) {
+  const normalizedValue = value?.trim()
+  return normalizedValue ? normalizedValue : null
 }
 
 @Controller('memories')

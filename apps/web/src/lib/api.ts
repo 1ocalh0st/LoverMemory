@@ -10,6 +10,10 @@ export class ApiError extends Error {
   }
 }
 
+function getApiBaseUrl() {
+  return import.meta.env.VITE_API_BASE_URL ?? '/api'
+}
+
 function getCookie(name: string) {
   return document.cookie
     .split('; ')
@@ -17,6 +21,24 @@ function getCookie(name: string) {
     ?.split('=')
     .slice(1)
     .join('=')
+}
+
+export function resolveApiAssetUrl(path: string | null | undefined) {
+  if (!path) {
+    return ''
+  }
+
+  if (/^(?:[a-z]+:)?\/\//i.test(path) || path.startsWith('data:') || path.startsWith('blob:')) {
+    return path
+  }
+
+  const apiBaseUrl = getApiBaseUrl()
+  if (!/^https?:\/\//i.test(apiBaseUrl)) {
+    return path
+  }
+
+  const apiOrigin = apiBaseUrl.replace(/\/api\/?$/, '/')
+  return new URL(path, apiOrigin).toString()
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -32,7 +54,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     }
   }
 
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL ?? '/api'}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     credentials: 'include',
     headers

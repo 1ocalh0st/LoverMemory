@@ -1,66 +1,72 @@
 <template>
   <div class="auth-page">
-    <section class="auth-poster">
-      <div class="auth-poster-copy">
-        <span class="auth-kicker">{{ t('brand') }}</span>
+    <section class="auth-shell glass">
+      <div class="auth-hero">
+        <span class="eyebrow">Private entry</span>
         <h1>{{ t('auth.title') }}</h1>
         <p>{{ t('auth.subtitle') }}</p>
-      </div>
-    </section>
-
-    <section class="auth-card glass">
-      <div class="page-header">
-        <h1>{{ t('brand') }}</h1>
-        <p>{{ t('auth.subtitle') }}</p>
-      </div>
-
-      <div class="auth-copy glass">
-        <strong>{{ t('auth.deviceTitle') }}</strong>
-        <p>{{ t('auth.deviceBody') }}</p>
-        <p class="auth-muted">{{ t('auth.loginHint') }}</p>
-      </div>
-
-      <div class="auth-form-grid">
-        <label>
-          <span>{{ t('auth.name') }}</span>
-          <input v-model="displayName" class="field" />
-        </label>
-        <label>
-          <span>{{ t('auth.email') }}</span>
-          <input v-model="email" type="email" class="field" />
-        </label>
-      </div>
-
-      <div class="auth-actions">
-        <button class="button-primary" :disabled="busy" @click="handleRegister">{{ t('auth.register') }}</button>
-        <button class="button-secondary" :disabled="busy" @click="handleLogin">{{ t('auth.login') }}</button>
-      </div>
-
-      <details class="auth-recovery">
-        <summary>{{ t('auth.recovery') }}</summary>
-        <p>{{ t('auth.recoveryBody') }}</p>
-        <p v-if="recoveryMode === 'disabled'" class="auth-muted">{{ t('auth.recoveryDisabled') }}</p>
-        <p v-else class="auth-muted">{{ t('auth.recoveryPreview') }}</p>
-        <button
-          v-if="recoveryMode === 'preview'"
-          class="button-secondary"
-          :disabled="busy"
-          @click="handleRecovery"
-        >
-          {{ t('auth.recoveryAction') }}
-        </button>
-        <div v-if="recoveryPreview" class="auth-preview">
-          {{ t('auth.recoveryResult', { token: recoveryPreview }) }}
+        <div class="auth-hero-image">
+          <img src="/pictures/fujimountain.jpg" alt="Quiet landscape" />
         </div>
-      </details>
+      </div>
 
-      <p v-if="error" class="auth-error">{{ error }}</p>
+      <section class="auth-card">
+        <div class="auth-card-head">
+          <span class="field-label">{{ t('brand') }}</span>
+          <h2 class="headline-md">Enter your scrapbook</h2>
+          <p class="helper-copy">{{ t('auth.subtitle') }}</p>
+        </div>
+
+        <div class="auth-copy">
+          <strong>{{ t('auth.deviceTitle') }}</strong>
+          <p>{{ t('auth.deviceBody') }}</p>
+          <p class="auth-muted">{{ t('auth.loginHint') }}</p>
+        </div>
+
+        <div class="auth-form-grid">
+          <label class="field-block">
+            <span class="field-label">{{ t('auth.name') }}</span>
+            <input v-model="displayName" class="field" />
+          </label>
+          <label class="field-block">
+            <span class="field-label">{{ t('auth.email') }}</span>
+            <input v-model="email" type="email" class="field" />
+          </label>
+        </div>
+
+        <div class="auth-actions">
+          <button class="button-primary" :disabled="busy" @click="handleRegister">{{ t('auth.register') }}</button>
+          <button class="button-secondary" :disabled="busy" @click="handleLogin">{{ t('auth.login') }}</button>
+        </div>
+
+        <p class="auth-muted auth-mode-hint">{{ modeHint }}</p>
+
+        <details class="auth-recovery">
+          <summary>{{ t('auth.recovery') }}</summary>
+          <p>{{ t('auth.recoveryBody') }}</p>
+          <p v-if="recoveryMode === 'disabled'" class="auth-muted">{{ t('auth.recoveryDisabled') }}</p>
+          <p v-else class="auth-muted">{{ t('auth.recoveryPreview') }}</p>
+          <button
+            v-if="recoveryMode === 'preview'"
+            class="button-secondary auth-recovery-action"
+            :disabled="busy"
+            @click="handleRecovery"
+          >
+            {{ t('auth.recoveryAction') }}
+          </button>
+          <div v-if="recoveryPreview" class="auth-preview">
+            {{ t('auth.recoveryResult', { token: recoveryPreview }) }}
+          </div>
+        </details>
+
+        <p v-if="error" class="auth-error">{{ error }}</p>
+      </section>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
@@ -77,9 +83,10 @@ const busy = ref(false)
 const error = ref('')
 const recoveryPreview = ref('')
 const recoveryMode = ref<SessionPayload['recoveryMode']>('disabled')
+const modeHint = computed(() => 'Registration requires both name and email. Sign-in accepts either one.')
 
 onMounted(async () => {
-  animate('.auth-card' as any, { opacity: [0, 1], y: [18, 0] } as any, { duration: 0.75 })
+  animate('.auth-shell' as any, { opacity: [0, 1], y: [18, 0] } as any, { duration: 0.75 })
   try {
     const session = await loadSession()
     recoveryMode.value = session.recoveryMode ?? 'disabled'
@@ -97,15 +104,32 @@ async function finishSuccess(result: { needsPairing?: boolean }) {
   await router.push(result.needsPairing ? { name: 'pairing' } : { name: 'home' })
 }
 
+function normalizedDisplayName() {
+  return displayName.value.trim()
+}
+
+function normalizedEmail() {
+  return email.value.trim()
+}
+
+function loginIdentifier() {
+  return normalizedEmail() || normalizedDisplayName()
+}
+
 async function handleRegister() {
+  if (!normalizedDisplayName() || !normalizedEmail()) {
+    error.value = 'Name and email are both required to register.'
+    return
+  }
+
   busy.value = true
   error.value = ''
   try {
     const start = await api<any>('/auth/passkeys/register/start', {
       method: 'POST',
       body: JSON.stringify({
-        email: email.value,
-        displayName: displayName.value,
+        email: normalizedEmail(),
+        displayName: normalizedDisplayName(),
         locale: locale.value,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       })
@@ -114,7 +138,7 @@ async function handleRegister() {
     const result = await api<{ needsPairing?: boolean }>('/auth/passkeys/register/finish', {
       method: 'POST',
       body: JSON.stringify({
-        email: email.value,
+        email: normalizedEmail(),
         credential
       })
     })
@@ -127,20 +151,25 @@ async function handleRegister() {
 }
 
 async function handleLogin() {
+  if (!loginIdentifier()) {
+    error.value = 'Enter your name or email to sign in.'
+    return
+  }
+
   busy.value = true
   error.value = ''
   try {
     const start = await api<any>('/auth/passkeys/login/start', {
       method: 'POST',
       body: JSON.stringify({
-        email: email.value
+        identifier: loginIdentifier()
       })
     })
     const credential = await startAuthentication({ optionsJSON: start })
     const result = await api<{ needsPairing?: boolean }>('/auth/passkeys/login/finish', {
       method: 'POST',
       body: JSON.stringify({
-        email: email.value,
+        identifier: loginIdentifier(),
         credential
       })
     })
@@ -153,13 +182,18 @@ async function handleLogin() {
 }
 
 async function handleRecovery() {
+  if (!normalizedEmail()) {
+    error.value = 'Email is required for recovery.'
+    return
+  }
+
   busy.value = true
   error.value = ''
   recoveryPreview.value = ''
   try {
     const result = await api<{ previewToken?: string }>('/auth/recovery/request', {
       method: 'POST',
-      body: JSON.stringify({ email: email.value })
+      body: JSON.stringify({ email: normalizedEmail() })
     })
     recoveryPreview.value = result.previewToken ?? ''
   } catch (cause) {
@@ -173,81 +207,88 @@ async function handleRecovery() {
 <style scoped>
 .auth-page {
   min-height: 100vh;
+  padding: clamp(0.8rem, 2vw, 1.2rem);
   display: grid;
-  grid-template-columns: 1.2fr minmax(340px, 560px);
-  padding: 1.4rem;
-  gap: 1.2rem;
+  place-items: center;
 }
 
-.auth-poster,
-.auth-card {
-  border-radius: 38px;
-}
-
-.auth-poster {
-  position: relative;
-  overflow: hidden;
-  min-height: calc(100vh - 2.8rem);
-  background:
-    linear-gradient(150deg, rgba(9, 12, 18, 0.18), rgba(9, 12, 18, 0.58)),
-    url('/pictures/fujimountain.jpg') center/cover;
-  color: white;
-  display: flex;
-  align-items: flex-end;
-  padding: clamp(2rem, 4vw, 4rem);
-}
-
-.auth-poster-copy {
-  max-width: 34rem;
-}
-
-.auth-kicker {
-  display: inline-flex;
-  padding: 0.5rem 0.8rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(16px);
-}
-
-.auth-poster h1 {
-  font-size: clamp(3rem, 7vw, 5.6rem);
-  line-height: 0.95;
-  margin: 1.2rem 0 1rem;
-  letter-spacing: -0.06em;
-}
-
-.auth-poster p {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.auth-card {
-  padding: clamp(1.6rem, 3vw, 2.3rem);
+.auth-shell {
+  width: min(1180px, 100%);
+  padding: 1rem;
+  border-radius: 34px;
   display: grid;
-  gap: 1.4rem;
-  align-content: center;
+  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr);
+  gap: 1rem;
 }
 
+.auth-hero,
+.auth-card,
 .auth-copy,
-.auth-form-grid label,
+.auth-form-grid,
 .auth-recovery {
   display: grid;
-  gap: 0.55rem;
+  gap: 1rem;
 }
 
-.auth-copy {
-  padding: 1rem 1.1rem;
-  border-radius: 24px;
+.auth-hero {
+  padding: clamp(1rem, 2vw, 1.6rem);
+  align-content: start;
 }
 
-.auth-copy p {
+.auth-hero h1,
+.auth-card h2,
+.auth-error {
   margin: 0;
 }
 
-.auth-form-grid {
+.auth-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 6.5vw, 5.2rem);
+  line-height: 0.92;
+}
+
+.auth-hero p {
+  margin: 0;
+  color: var(--text-soft);
+  max-width: 34rem;
+}
+
+.auth-hero-image {
+  overflow: hidden;
+  border-radius: 28px;
+  aspect-ratio: 4 / 3;
+  margin-top: 0.5rem;
+}
+
+.auth-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.auth-card {
+  padding: clamp(1rem, 2vw, 1.6rem);
+  border-radius: 28px;
+  background: rgba(255, 252, 248, 0.68);
+  box-shadow: inset 0 0 0 1px var(--outline);
+}
+
+.auth-card-head {
   display: grid;
-  gap: 1rem;
+  gap: 0.6rem;
+}
+
+.auth-copy {
+  padding: 1rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: inset 0 0 0 1px var(--outline);
+}
+
+.auth-copy strong,
+.auth-copy p,
+.auth-recovery p {
+  margin: 0;
 }
 
 .auth-actions {
@@ -259,22 +300,51 @@ async function handleRecovery() {
   color: var(--text-soft);
 }
 
-.auth-error,
-.auth-preview {
-  color: var(--accent);
+.auth-mode-hint {
+  margin: 0;
 }
 
-summary {
+.auth-recovery {
+  padding: 1rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.44);
+  box-shadow: inset 0 0 0 1px var(--outline);
+}
+
+.auth-recovery summary {
   cursor: pointer;
+  font-weight: 800;
+}
+
+.auth-recovery-action {
+  width: fit-content;
+}
+
+.auth-preview {
+  padding: 0.85rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: inset 0 0 0 1px var(--outline);
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.auth-error {
+  color: #8b3141;
+  font-weight: 700;
 }
 
 @media (max-width: 960px) {
   .auth-page {
+    min-height: 100svh;
+  }
+
+  .auth-shell {
     grid-template-columns: 1fr;
   }
 
-  .auth-poster {
-    min-height: 320px;
+  .auth-hero-image {
+    aspect-ratio: 16 / 9;
   }
 }
 </style>

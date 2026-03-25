@@ -20,16 +20,25 @@ export interface SessionPayload {
 }
 
 let sessionCache: Promise<SessionPayload> | null = null
+let sessionSnapshot: SessionPayload | null = null
 
 export function loadSession(force = false) {
   if (!sessionCache || force) {
-    sessionCache = api<SessionPayload>('/session')
+    sessionCache = api<SessionPayload>('/session').then((session) => {
+      sessionSnapshot = session
+      return session
+    })
   }
   return sessionCache
 }
 
+export function getSessionSnapshot() {
+  return sessionSnapshot
+}
+
 export function clearSessionCache() {
   sessionCache = null
+  sessionSnapshot = null
 }
 
 export async function authGuard(

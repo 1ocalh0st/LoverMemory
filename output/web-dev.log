@@ -1,0 +1,15 @@
+
+> @lover-memory/web@1.0.0 predev
+> node -e "if (process.version === 'v22.21.0') { console.error('Node.js v22.21.0 has a known HTTPS+Vite crash. Use v22.21.1+ or v22.20.0.'); process.exit(1) }"
+
+
+> @lover-memory/web@1.0.0 dev
+> vite
+
+
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m395[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttps://localhost:[1m5173[22m/[39m
+  [32m➜[39m  [1mLocal[22m:   [36mhttps://lovermemory.192.168.20.166.sslip.io:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttps://192.168.20.166:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttps://172.21.128.1:[1m5173[22m/[39m

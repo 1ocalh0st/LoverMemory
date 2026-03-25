@@ -1,64 +1,85 @@
 <template>
   <div class="page home-page">
-    <header class="editorial-header">
-      <h1 class="display-lg">{{ t('home.welcome') }}</h1>
-      <p class="body-lg">Timelines, anniversaries, photos, and future plans live here in one quiet space.</p>
-    </header>
+    <section class="section-card home-hero">
+      <div class="home-hero-copy">
+        <span class="eyebrow"></span>
+        <h1 class="display-lg">{{ t('home.welcome') }}</h1>
+        <p class="body-lg">从现在起，时间线、纪念日、照片与未来的计划都安放于这一个温柔明亮的看板里。</p>
 
-    <section class="hero-editorial">
-      <div class="hero-image-wrapper">
-        <img
-          class="hero-image"
-          :src="featuredImage"
-          alt="Featured memory"
-        />
+        <div class="home-stats">
+          <article class="home-stat-card">
+            <span>{{ t('home.stats.memories') }}</span>
+            <strong>{{ homeQuery.data.value?.stats.memoryCount ?? 0 }}</strong>
+          </article>
+          <article class="home-stat-card">
+            <span>{{ t('home.stats.anniversaries') }}</span>
+            <strong>{{ homeQuery.data.value?.stats.anniversaryCount ?? 0 }}</strong>
+          </article>
+          <article class="home-stat-card">
+            <span>{{ t('home.stats.wishlist') }}</span>
+            <strong>{{ homeQuery.data.value?.stats.wishlistCompleted ?? 0 }}</strong>
+          </article>
+        </div>
       </div>
-      <div class="hero-card glass">
-        <span class="hero-chip">{{ t('common.featuredMemory') }}</span>
-        <h2 class="headline-md">{{ homeQuery.data.value?.featuredMemory?.title || t('home.empty') }}</h2>
-        <p class="body-lg">{{ homeQuery.data.value?.featuredMemory?.story || 'Begin with a photo, a line of text, or the place where your story turned warm.' }}</p>
-      </div>
-    </section>
 
-    <section class="stats-editorial">
-      <article class="stat-item section-card">
-        <span class="stat-label">{{ t('home.stats.memories') }}</span>
-        <strong class="display-lg">{{ homeQuery.data.value?.stats.memoryCount ?? 0 }}</strong>
-      </article>
-      <article class="stat-item section-card">
-        <span class="stat-label">{{ t('home.stats.anniversaries') }}</span>
-        <strong class="display-lg">{{ homeQuery.data.value?.stats.anniversaryCount ?? 0 }}</strong>
-      </article>
-      <article class="stat-item section-card">
-        <span class="stat-label">{{ t('home.stats.wishlist') }}</span>
-        <strong class="display-lg">{{ homeQuery.data.value?.stats.wishlistCompleted ?? 0 }}</strong>
-      </article>
-    </section>
-
-    <section class="home-grid">
-      <article class="section-card anniversary-card">
-        <h3 class="headline-md">{{ t('common.nextAnniversary') }}</h3>
-        <template v-if="homeQuery.data.value?.nextAnniversary">
-          <p class="next-anniversary-title">{{ homeQuery.data.value?.nextAnniversary.title }}</p>
-          <p class="next-anniversary-meta">
-            {{ t('common.daysLeft', { count: homeQuery.data.value?.nextAnniversary.daysLeft }) }}
+      <article class="home-feature glass">
+        <div class="home-feature-image">
+          <img class="hero-image" :src="featuredImage" alt="Featured memory" />
+        </div>
+        <div class="home-feature-copy">
+          <span class="field-label">{{ t('common.featuredMemory') }}</span>
+          <h2 class="headline-md">{{ homeQuery.data.value?.featuredMemory?.title || t('home.empty') }}</h2>
+          <p class="body-lg">
+            {{
+              homeQuery.data.value?.featuredMemory?.story ||
+              '从一张照片、一句话，或者一个让平凡某天突然值得铭记的地方开始。'
+            }}
           </p>
+        </div>
+      </article>
+    </section>
+
+    <RecentMemoryNotice
+      v-if="recentMemoryAnnouncement"
+      :memory="recentMemoryAnnouncement"
+      :title="t('common.justAdded')"
+      :subtitle="t('home.recentlyAddedNote')"
+      :fallback-copy="t('home.recentlyAddedFallback')"
+    >
+      <template #actions>
+        <button class="button-secondary" type="button" @click="goToTimeline">{{ t('common.viewTimeline') }}</button>
+        <button class="button-ghost" type="button" @click="dismissRecentMemoryAnnouncement">
+          {{ t('common.dismiss') }}
+        </button>
+      </template>
+    </RecentMemoryNotice>
+
+    <section class="home-panels">
+      <article class="section-card home-panel">
+        <span class="field-label">{{ t('common.nextAnniversary') }}</span>
+        <template v-if="homeQuery.data.value?.nextAnniversary">
+          <h2 class="headline-md">{{ homeQuery.data.value?.nextAnniversary.title }}</h2>
+          <p class="body-lg">{{ t('common.daysLeft', { count: homeQuery.data.value?.nextAnniversary.daysLeft }) }}</p>
         </template>
         <div v-else class="empty-state">{{ t('anniversaries.empty') }}</div>
       </article>
 
-      <article class="section-card recent-memories-card">
-        <h3 class="headline-md">{{ t('common.recentMemories') }}</h3>
+      <article class="section-card home-panel">
+        <span class="field-label">{{ t('common.recentMemories') }}</span>
         <div v-if="homeQuery.data.value?.recentMemories?.length" class="recent-list">
-          <div v-for="(memory, index) in homeQuery.data.value?.recentMemories" :key="memory.id" class="recent-item">
-            <img 
-              :src="memory.coverAsset?.originalUrl || '/pictures/coffee.jpg'" 
-              :alt="memory.title" 
-              :class="{ 'asymmetric-radius-1': Number(index) % 2 === 0, 'asymmetric-radius-2': Number(index) % 2 !== 0 }"
-            />
+          <div
+            v-for="memory in homeQuery.data.value?.recentMemories"
+            :key="memory.id"
+            class="recent-item"
+            :class="{ 'recent-item--new': recentMemoryAnnouncement?.id === memory.id }"
+          >
+            <img :src="resolveApiAssetUrl(memory.coverAsset?.originalUrl) || '/pictures/coffee.jpg'" :alt="memory.title" />
             <div class="recent-item-copy">
-              <strong>{{ memory.title }}</strong>
-              <small>{{ new Date(memory.occurredAt).toLocaleDateString() }}</small>
+              <div class="recent-item-title">
+                <strong>{{ memory.title }}</strong>
+                <span v-if="recentMemoryAnnouncement?.id === memory.id" class="recent-item-badge">{{ t('common.justAdded') }}</span>
+              </div>
+              <small>{{ formatMemoryDate(memory.occurredAt) }}</small>
             </div>
           </div>
         </div>
@@ -69,12 +90,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
-import { api } from '@/lib/api'
+import RecentMemoryNotice from '@/components/RecentMemoryNotice.vue'
+import { api, resolveApiAssetUrl } from '@/lib/api'
+import { formatDateInAppTimeZone } from '@/lib/datetime'
+import { clearRecentMemoryAnnouncement, readRecentMemoryAnnouncement } from '@/lib/recentMemoryAnnouncement'
 
 const { t } = useI18n()
+const router = useRouter()
+const recentMemoryAnnouncement = ref(readRecentMemoryAnnouncement())
 
 const homeQuery = useQuery({
   queryKey: ['home'],
@@ -83,40 +110,61 @@ const homeQuery = useQuery({
 
 const featuredImage = computed(
   () =>
-    homeQuery.data.value?.featuredMemory?.coverAsset?.variants?.lg ||
-    homeQuery.data.value?.featuredMemory?.coverAsset?.originalUrl ||
+    resolveApiAssetUrl(homeQuery.data.value?.featuredMemory?.coverAsset?.variants?.lg) ||
+    resolveApiAssetUrl(homeQuery.data.value?.featuredMemory?.coverAsset?.originalUrl) ||
     '/pictures/fujimountain.jpg'
 )
+
+function goToTimeline() {
+  router.push({ name: 'timeline' })
+}
+
+function dismissRecentMemoryAnnouncement() {
+  clearRecentMemoryAnnouncement()
+  recentMemoryAnnouncement.value = null
+}
+
+function formatMemoryDate(value: string) {
+  return formatDateInAppTimeZone(value)
+}
 </script>
 
 <style scoped>
 .home-page {
-  gap: 4rem;
+  gap: 1.4rem;
 }
 
-.editorial-header {
-  max-width: 800px;
+.home-hero {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.95fr);
+  align-items: stretch;
 }
 
-.editorial-header h1 {
-  margin-bottom: 1rem;
-  color: var(--primary);
+.home-hero-copy,
+.home-feature,
+.home-feature-copy,
+.home-panel {
+  display: grid;
+  gap: 1.25rem;
+  align-content: center;
 }
 
-.hero-editorial {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  margin-top: 1rem;
+.home-hero h1,
+.home-feature h2,
+.home-panel h2 {
+  margin: 0;
 }
 
-.hero-image-wrapper {
-  width: 100%;
-  height: 500px;
-  border-radius: var(--radius-xl);
+.home-feature {
+  padding: 1rem;
+  border-radius: 28px;
+}
+
+.home-feature-image {
   overflow: hidden;
-  box-shadow: var(--shadow-ambient);
+  border-radius: 22px;
+  aspect-ratio: 4 / 5;
 }
 
 .hero-image {
@@ -125,195 +173,117 @@ const featuredImage = computed(
   object-fit: cover;
 }
 
-.hero-card {
-  position: relative;
-  margin-top: -6rem;
-  margin-right: 2rem;
-  width: min(90%, 500px);
-  padding: 2.5rem;
-  border-radius: var(--radius-xl);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  z-index: 10;
-}
-
-.hero-chip {
-  display: inline-flex;
-  padding: 0.4rem 0.8rem;
-  border-radius: var(--radius-full);
-  background: var(--primary-container);
-  color: var(--on-primary-container);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 1.5rem;
-}
-
-.hero-card h2 {
-  margin: 0 0 1rem;
-  color: var(--primary);
-}
-
-.hero-card p {
-  margin: 0;
-  color: var(--text-soft);
-}
-
-.stats-editorial {
+.home-stats {
   display: grid;
+  gap: 0.8rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2rem;
 }
 
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  border-radius: var(--radius-xl);
-  padding: 2.5rem 1.5rem;
-  transition: transform 0.2s ease;
-}
-
-.stat-item:hover {
-  transform: translateY(-4px);
-}
-
-.stat-label {
-  color: var(--text-soft);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.stat-item strong {
-  color: var(--primary);
-}
-
-.home-grid {
+.home-stat-card {
+  padding: 1rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 0 0 1px var(--outline);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2rem;
+  gap: 0.35rem;
 }
 
-.anniversary-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  background: linear-gradient(135deg, var(--surface-container-lowest), var(--surface-container-low));
+.home-stat-card span {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.anniversary-card h3, .recent-memories-card h3 {
-  margin-top: 0;
-  margin-bottom: 2rem;
-  color: var(--primary);
+.home-stat-card strong {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  line-height: 0.95;
 }
 
-.next-anniversary-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem;
-}
-
-.next-anniversary-meta {
-  color: var(--primary);
-  opacity: 0.8;
-  font-size: 1.1rem;
+.home-panels {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
 }
 
 .recent-list {
   display: grid;
-  gap: 1.5rem;
+  gap: 0.85rem;
 }
 
 .recent-item {
   display: grid;
-  grid-template-columns: 100px 1fr;
-  gap: 1.5rem;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 0.9rem;
   align-items: center;
+  padding: 0.55rem;
+  border-radius: 20px;
+}
+
+.recent-item--new {
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(207, 140, 128, 0.24);
 }
 
 .recent-item img {
-  width: 100px;
-  height: 100px;
+  width: 76px;
+  height: 76px;
   object-fit: cover;
-  box-shadow: var(--shadow-ambient);
-}
-
-/* Asymmetric Image Corners for Scrapbook Feel */
-.asymmetric-radius-1 {
-  border-radius: var(--radius-xl) var(--radius-sm) var(--radius-lg) var(--radius-xl);
-}
-
-.asymmetric-radius-2 {
-  border-radius: var(--radius-md) var(--radius-xl) var(--radius-xl) var(--radius-sm);
+  border-radius: 18px;
 }
 
 .recent-item-copy {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.recent-item-title {
   display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
 }
 
 .recent-item-copy strong {
-  font-size: 1.1rem;
-  line-height: 1.4;
   font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.recent-item-badge {
+  display: inline-flex;
+  align-items: center;
+  color: #fff8f4;
+  background:
+    radial-gradient(circle at top right, rgba(255, 223, 207, 0.5), transparent 36%),
+    linear-gradient(135deg, #a5666d 0%, #d08b8a 100%);
+  box-shadow: var(--shadow-glow);
+  border-radius: 999px;
+  padding: 0.35rem 0.62rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .recent-item-copy small {
   color: var(--text-soft);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
-@media (max-width: 840px) {
-  .stats-editorial,
-  .home-grid {
+@media (max-width: 980px) {
+  .home-hero,
+  .home-panels {
     grid-template-columns: 1fr;
   }
-  
-  .hero-image-wrapper {
-    height: 60vh;
-    min-height: 400px;
-    max-height: 500px;
-  }
-
-  .hero-card {
-    margin-right: 0;
-    margin-top: -4rem;
-    width: 95%;
-    align-self: center;
-    padding: 1.5rem;
-  }
 }
 
-@media (max-width: 480px) {
-  .home-page {
-    gap: 2.5rem;
-  }
-  
-  .recent-item {
-    grid-template-columns: 80px 1fr;
-    gap: 1rem;
-  }
-
-  .recent-item img {
-    width: 80px;
-    height: 80px;
-  }
-  
-  .hero-card {
-    width: 90%;
-    margin-top: -3rem;
+@media (max-width: 640px) {
+  .home-stats {
+    grid-template-columns: 1fr;
   }
 }
 </style>

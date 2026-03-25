@@ -1,63 +1,133 @@
 <template>
-  <div class="page">
-    <header class="editorial-header">
+  <div class="page settings-page">
+    <section class="section-card settings-hero">
+      <span class="eyebrow">个人偏好</span>
       <h1 class="display-lg">{{ t('settings.title') }}</h1>
-      <p class="body-lg">Persist language, theme, time format, timezone, and push subscriptions to your private account.</p>
-    </header>
-
-    <section class="section-card settings-grid">
-      <label>
-        <span class="settings-label">{{ t('settings.locale') }}</span>
-        <select v-model="form.locale" class="select ledger-style">
-          <option value="en">English</option>
-          <option value="zh">中文</option>
-        </select>
-      </label>
-
-      <label>
-        <span class="settings-label">{{ t('settings.theme') }}</span>
-        <select v-model="form.theme" class="select ledger-style">
-          <option value="system">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
-      </label>
-
-      <label>
-        <span class="settings-label">{{ t('settings.timeFormat') }}</span>
-        <select v-model="form.timeFormat" class="select ledger-style">
-          <option value="24h">24h</option>
-          <option value="12h">12h</option>
-        </select>
-      </label>
-
-      <label>
-        <span class="settings-label">{{ t('settings.timezone') }}</span>
-        <input v-model="form.timezone" class="field ledger-style" />
-      </label>
-
-      <div class="settings-actions">
-        <button class="button-primary" :disabled="saving" @click="save">{{ t('actions.save') }}</button>
-        <button class="button-secondary" :disabled="pushBusy" @click="togglePush">{{ pushLabel }}</button>
-      </div>
+      <p class="body-lg">
+        设置语言、主题、时间格式并管理通知，打造属于你的独家剪贴簿。
+      </p>
     </section>
 
-    <p v-if="message" class="feedback">{{ message }}</p>
+    <section class="settings-layout">
+      <article class="section-card settings-panel">
+        <div class="settings-stack">
+          <div class="field-block">
+            <span class="field-label">{{ t('settings.locale') }}</span>
+            <div class="pill-row">
+              <button
+                v-for="option in localeOptions"
+                :key="option.value"
+                class="pill-button"
+                :class="{ active: form.locale === option.value }"
+                @click="form.locale = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+          </div>
+
+          <div class="field-block">
+            <span class="field-label">{{ t('settings.theme') }}</span>
+            <div class="pill-row">
+              <button
+                v-for="option in themeOptions"
+                :key="option.value"
+                class="pill-button"
+                :class="{ active: form.theme === option.value }"
+                @click="form.theme = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+          </div>
+
+          <div class="field-block">
+            <span class="field-label">{{ t('settings.timeFormat') }}</span>
+            <div class="pill-row">
+              <button
+                v-for="option in timeFormatOptions"
+                :key="option.value"
+                class="pill-button"
+                :class="{ active: form.timeFormat === option.value }"
+                @click="form.timeFormat = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+          </div>
+
+          <label class="field-block">
+            <span class="field-label">{{ t('settings.timezone') }}</span>
+            <input v-model="form.timezone" class="field" placeholder="Asia/Shanghai" />
+          </label>
+
+          <label class="field-block">
+            <span class="field-label">{{ t('settings.displayName') || 'Display Name' }}</span>
+            <input v-model="form.displayName" class="field" placeholder="Your Name" />
+          </label>
+        </div>
+
+        <div class="settings-actions">
+          <button class="button-primary" :disabled="saving" @click="save">{{ t('actions.save') }}</button>
+        </div>
+      </article>
+
+      <article class="section-card settings-panel">
+        <div class="settings-stack">
+          <div class="field-block">
+            <span class="field-label">{{ t('settings.push') }}</span>
+            <p class="helper-copy">只在需要接收通知的设备上开启共享提醒。</p>
+            <button class="button-secondary settings-full-width" :disabled="pushBusy" @click="togglePush">
+              {{ pushLabel }}
+            </button>
+            <div class="status-note">
+              {{ pushSubscribed ? '此设备已开启推送。' : '此设备推送已关闭。' }}
+            </div>
+          </div>
+
+          <div class="field-block">
+            <span class="field-label">账号</span>
+            <p class="helper-copy">如果不想让此设备自动打开共享空间，请退出登录。</p>
+            <button class="button-ghost settings-full-width" @click="logout">{{ t('actions.logout') }}</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <p v-if="message" class="feedback status-note">{{ message }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watchEffect } from 'vue'
+import { useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/lib/api'
 import { clearSessionCache, loadSession } from '@/lib/session'
 
 const { t, locale } = useI18n()
+const router = useRouter()
 const saving = ref(false)
 const pushBusy = ref(false)
 const message = ref('')
 const pushSubscribed = ref(false)
+
+const localeOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'zh', label: '中文' }
+]
+
+const themeOptions = [
+  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' }
+]
+
+const timeFormatOptions = [
+  { value: '24h', label: '24h' },
+  { value: '12h', label: '12h' }
+]
 
 const sessionQuery = useQuery({
   queryKey: ['session'],
@@ -68,7 +138,8 @@ const form = ref({
   locale: 'en',
   theme: 'system',
   timeFormat: '24h',
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  displayName: ''
 })
 
 watchEffect(() => {
@@ -78,7 +149,8 @@ watchEffect(() => {
     locale: user.locale,
     theme: user.theme,
     timeFormat: user.timeFormat,
-    timezone: user.timezone
+    timezone: user.timezone,
+    displayName: user.displayName || ''
   }
   locale.value = user.locale
   document.documentElement.dataset.theme =
@@ -112,9 +184,9 @@ async function save() {
           ? 'dark'
           : 'light'
         : form.value.theme
-    message.value = 'Preferences saved'
+    message.value = '偏好已保存'
   } catch (cause) {
-    message.value = cause instanceof ApiError ? cause.message : 'Unable to save settings'
+    message.value = cause instanceof ApiError ? cause.message : '无法保存设置'
   } finally {
     saving.value = false
   }
@@ -146,7 +218,7 @@ async function togglePush() {
       })
       await current.unsubscribe()
       pushSubscribed.value = false
-      message.value = 'Push notifications disabled'
+      message.value = '已禁用推送提醒'
       return
     }
 
@@ -169,7 +241,7 @@ async function togglePush() {
       body: JSON.stringify(subscription)
     })
     pushSubscribed.value = true
-    message.value = 'Push notifications enabled'
+    message.value = '已开启推送提醒'
   } catch (cause) {
     message.value = cause instanceof ApiError ? cause.message : (cause as Error).message
   } finally {
@@ -177,27 +249,64 @@ async function togglePush() {
   }
 }
 
-const pushLabel = computed(() => (pushSubscribed.value ? 'Disable Push' : 'Enable Push'))
+async function logout() {
+  await api('/auth/session', { method: 'DELETE' })
+  clearSessionCache()
+  await router.push({ name: 'auth' })
+}
+
+const pushLabel = computed(() => (pushSubscribed.value ? '关闭推送' : '开启推送'))
 </script>
 
 <style scoped>
-.settings-grid {
-  display: grid;
-  gap: 1rem;
+.settings-page {
+  gap: 1.4rem;
 }
 
-.settings-grid label {
+.settings-hero {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.9rem;
+}
+
+.settings-hero h1,
+.feedback {
+  margin: 0;
+}
+
+.settings-layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+}
+
+.settings-panel,
+.settings-stack {
+  display: grid;
+  gap: 1.1rem;
 }
 
 .settings-actions {
   display: flex;
-  gap: 0.8rem;
-  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.settings-full-width {
+  width: 100%;
 }
 
 .feedback {
-  color: var(--text-soft);
+  width: fit-content;
+}
+
+@media (max-width: 980px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .settings-hero {
+    display: none;
+  }
 }
 </style>
