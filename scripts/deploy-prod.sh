@@ -7,7 +7,7 @@ cd "$ROOT_DIR"
 wait_for_url() {
   url="$1"
   label="$2"
-  attempts="${3:-30}"
+  attempts="${3:-45}"
   delay_seconds="${4:-2}"
   attempt=1
 
