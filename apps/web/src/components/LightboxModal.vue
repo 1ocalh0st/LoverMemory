@@ -1,29 +1,23 @@
 <template>
   <Teleport to="body">
-    <div v-if="open && normalizedItems.length" class="lightbox" @click.self="emit('close')">
-      <div class="lightbox-toolbar">
-        <div v-if="hasMultiple" class="lightbox-counter glass">
-          {{ currentIndex + 1 }} / {{ normalizedItems.length }}
-        </div>
-        <button class="lightbox-close button-secondary" type="button" @click="emit('close')">Close</button>
-      </div>
-
-      <div class="lightbox-frame" :class="{ 'is-multi': hasMultiple, 'is-single': !hasMultiple }">
-        <button
-          v-if="hasMultiple"
-          class="lightbox-nav lightbox-nav-prev button-secondary"
-          type="button"
-          aria-label="Previous image"
-          :disabled="currentIndex === 0"
-          @click.stop="goTo(currentIndex - 1)"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m15 18-6-6 6-6"></path>
+    <Transition name="lightbox-fade">
+      <div v-if="open && normalizedItems.length" class="lightbox" @click.self="emit('close')">
+        <!-- Close button -->
+        <button class="lightbox-close" type="button" aria-label="Close" @click="emit('close')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6L6 18M6 6l12 12"></path>
           </svg>
         </button>
 
+        <!-- Counter -->
+        <div v-if="hasMultiple" class="lightbox-counter">
+          {{ currentIndex + 1 }} / {{ normalizedItems.length }}
+        </div>
+
+        <!-- Main image area -->
         <div
-          class="lightbox-stage glass"
+          class="lightbox-stage"
+          :class="{ 'is-multi': hasMultiple }"
           @touchstart.passive="handleTouchStart"
           @touchmove.passive="handleTouchMove"
           @touchend="handleTouchEnd"
@@ -33,42 +27,58 @@
             <div
               v-for="(item, index) in normalizedItems"
               :key="`${item.src}-${index}`"
-              class="lightbox-media"
+              class="lightbox-slide"
             >
               <img :src="item.src" :alt="item.alt || ''" loading="lazy" decoding="async" />
-              <div v-if="item.caption" class="lightbox-caption">{{ item.caption }}</div>
             </div>
           </div>
         </div>
 
+        <!-- Caption -->
+        <div v-if="currentItem?.caption" class="lightbox-caption">{{ currentItem.caption }}</div>
+
+        <!-- Navigation arrows (PC) -->
         <button
           v-if="hasMultiple"
-          class="lightbox-nav lightbox-nav-next button-secondary"
+          class="lightbox-nav lightbox-nav-prev"
+          type="button"
+          aria-label="Previous image"
+          :disabled="currentIndex === 0"
+          @click.stop="goTo(currentIndex - 1)"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"></path>
+          </svg>
+        </button>
+        <button
+          v-if="hasMultiple"
+          class="lightbox-nav lightbox-nav-next"
           type="button"
           aria-label="Next image"
           :disabled="currentIndex >= normalizedItems.length - 1"
           @click.stop="goTo(currentIndex + 1)"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m9 18 6-6-6-6"></path>
           </svg>
         </button>
-      </div>
 
-      <div v-if="hasMultiple" class="lightbox-filmstrip">
-        <button
-          v-for="(item, index) in normalizedItems"
-          :key="`${item.src}-${index}`"
-          class="lightbox-thumb"
-          :class="{ active: index === currentIndex }"
-          type="button"
-          :aria-label="`View image ${index + 1}`"
-          @click="goTo(index)"
-        >
-          <img :src="item.src" :alt="item.alt || ''" loading="lazy" decoding="async" />
-        </button>
+        <!-- Filmstrip dots (mobile) / thumbnails (PC) -->
+        <div v-if="hasMultiple" class="lightbox-indicators">
+          <button
+            v-for="(item, index) in normalizedItems"
+            :key="`thumb-${item.src}-${index}`"
+            class="lightbox-dot"
+            :class="{ active: index === currentIndex }"
+            type="button"
+            :aria-label="`View image ${index + 1}`"
+            @click="goTo(index)"
+          >
+            <img :src="item.src" :alt="item.alt || ''" loading="lazy" decoding="async" />
+          </button>
+        </div>
       </div>
-    </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -159,15 +169,18 @@ watch(
   () => props.open,
   (open) => {
     if (open) {
+      document.body.style.overflow = 'hidden'
       window.addEventListener('keydown', handleKeydown)
       return
     }
+    document.body.style.overflow = ''
     window.removeEventListener('keydown', handleKeydown)
   },
   { immediate: true }
 )
 
 onBeforeUnmount(() => {
+  document.body.style.overflow = ''
   window.removeEventListener('keydown', handleKeydown)
 })
 
@@ -281,63 +294,81 @@ function handleKeydown(event: KeyboardEvent) {
 </script>
 
 <style scoped>
+/* ─── Transition ─── */
+.lightbox-fade-enter-active,
+.lightbox-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.lightbox-fade-enter-from,
+.lightbox-fade-leave-to {
+  opacity: 0;
+}
+
+/* ─── Overlay ─── */
 .lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(39, 28, 29, 0.52);
+  background: rgba(20, 16, 16, 0.55);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  display: grid;
-  align-content: center;
-  gap: 1rem;
-  z-index: 60;
-  padding: 1.25rem;
-}
-
-.lightbox-toolbar {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
+  justify-content: center;
+  z-index: 60;
+  padding: 1rem;
+  gap: 0;
 }
 
-.lightbox-counter {
-  min-height: 2.8rem;
-  padding: 0.75rem 1rem;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  color: rgba(255, 248, 244, 0.96);
-  font-size: 0.84rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
+/* ─── Close button ─── */
 .lightbox-close {
-  margin-left: auto;
-}
-
-.lightbox-frame {
+  position: absolute;
+  top: clamp(0.8rem, 2vw, 1.2rem);
+  right: clamp(0.8rem, 2vw, 1.2rem);
+  z-index: 5;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 1rem;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
-.lightbox-frame.is-single {
-  grid-template-columns: minmax(0, 1fr);
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: scale(1.06);
 }
 
+/* ─── Counter ─── */
+.lightbox-counter {
+  position: absolute;
+  top: clamp(0.8rem, 2vw, 1.2rem);
+  left: clamp(0.8rem, 2vw, 1.2rem);
+  z-index: 5;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* ─── Stage (no frame/shell) ─── */
 .lightbox-stage {
   min-width: 0;
-  width: min(1120px, 100%);
-  max-width: min(1120px, 100%);
-  margin: 0 auto;
-  justify-self: center;
-  border-radius: 32px;
-  padding: 1rem;
+  width: 100%;
+  max-width: min(1200px, 100%);
   overflow: hidden;
   touch-action: pan-y;
+  flex: 0 1 auto;
 }
 
 .lightbox-track {
@@ -347,126 +378,163 @@ function handleKeydown(event: KeyboardEvent) {
   will-change: transform;
 }
 
-.lightbox-media {
+.lightbox-slide {
   flex: 0 0 100%;
   width: 100%;
-  padding: 0 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
 }
 
+/* Image — no enclosing frame, clean and immersive */
 .lightbox-stage img {
   display: block;
   max-width: 100%;
-  max-height: calc(100vh - 12rem);
-  margin: 0 auto;
-  border-radius: 24px;
+  max-height: calc(100vh - 10rem);
+  max-height: calc(100svh - 10rem);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  object-fit: contain;
 }
 
+/* ─── Caption ─── */
 .lightbox-caption {
   margin-top: 0.9rem;
-  color: var(--text-soft);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.88rem;
+  font-weight: 500;
   text-align: center;
+  letter-spacing: 0.01em;
 }
 
+/* ─── Nav arrows (positioned on sides) ─── */
 .lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
   width: 3rem;
-  min-width: 3rem;
-  min-height: 3rem;
-  padding: 0;
+  height: 3rem;
   border-radius: 999px;
+  border: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
 }
 
-.lightbox-filmstrip {
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.lightbox-nav:disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.lightbox-nav-prev {
+  left: clamp(0.6rem, 2vw, 1.5rem);
+}
+
+.lightbox-nav-next {
+  right: clamp(0.6rem, 2vw, 1.5rem);
+}
+
+/* ─── Indicator dots / thumbnails ─── */
+.lightbox-indicators {
   display: flex;
   justify-content: center;
-  gap: 0.65rem;
+  gap: 0.5rem;
+  margin-top: 1rem;
   overflow-x: auto;
   padding-bottom: 0.1rem;
 }
 
-.lightbox-filmstrip::-webkit-scrollbar {
-  height: 6px;
+.lightbox-indicators::-webkit-scrollbar {
+  height: 4px;
 }
 
-.lightbox-filmstrip::-webkit-scrollbar-thumb {
-  background: var(--outline-strong);
+.lightbox-indicators::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 999px;
 }
 
-.lightbox-thumb {
-  width: 4.5rem;
-  height: 4.5rem;
+.lightbox-dot {
+  width: 3.6rem;
+  height: 3.6rem;
   padding: 0;
   border: 0;
-  border-radius: 18px;
+  border-radius: 12px;
   overflow: hidden;
-  opacity: 0.58;
-  transform: scale(0.96);
-  box-shadow:
-    0 10px 24px rgba(39, 28, 29, 0.12),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  opacity: 0.4;
+  transform: scale(0.92);
+  cursor: pointer;
   transition:
-    opacity 180ms ease,
-    transform 180ms ease,
-    box-shadow 180ms ease;
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
-.lightbox-thumb.active {
+.lightbox-dot.active {
   opacity: 1;
   transform: scale(1);
-  box-shadow:
-    0 16px 32px rgba(39, 28, 29, 0.18),
-    0 0 0 2px rgba(255, 248, 244, 0.5);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
-.lightbox-thumb img {
+.lightbox-dot img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+/* ─── Mobile ─── */
 @media (max-width: 720px) {
   .lightbox {
-    padding: 0.8rem;
-    align-content: stretch;
-  }
-
-  .lightbox-toolbar {
-    align-items: flex-start;
-  }
-
-  .lightbox-frame {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.75rem;
-  }
-
-  .lightbox-stage {
-    padding: 0.8rem;
+    padding: 0.65rem;
   }
 
   .lightbox-stage img {
-    max-height: calc(100svh - 14rem);
-    border-radius: 20px;
+    max-height: calc(100svh - 9rem);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   }
 
   .lightbox-nav {
-    position: fixed;
-    bottom: 6.2rem;
-    z-index: 2;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    top: auto;
+    bottom: 5rem;
+    transform: none;
+    width: 2.6rem;
+    height: 2.6rem;
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .lightbox-nav-prev {
-    left: 1rem;
+    left: 0.8rem;
   }
 
   .lightbox-nav-next {
-    right: 1rem;
+    right: 0.8rem;
   }
 
-  .lightbox-filmstrip {
-    justify-content: flex-start;
-    padding-inline: 0.1rem;
+  .lightbox-indicators {
+    margin-top: 0.75rem;
+    gap: 0.4rem;
+  }
+
+  .lightbox-dot {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 8px;
+  }
+
+  .lightbox-caption {
+    font-size: 0.82rem;
+    margin-top: 0.65rem;
   }
 }
 </style>

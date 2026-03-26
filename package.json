@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspace @lover-memory/shared && npm run build --workspace @lover-memory/api && npm run build --workspace @lover-memory/worker && npm run build --workspace @lover-memory/web",
+    "dev:start": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-start.ps1",
     "dev:web": "npm run dev --workspace @lover-memory/web",
     "dev:api": "npm run dev --workspace @lover-memory/api",
     "dev:worker": "npm run dev --workspace @lover-memory/worker",

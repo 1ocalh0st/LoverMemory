@@ -35,7 +35,7 @@
     </aside>
 
     <div class="shell-main" :class="{ 'immersive-gallery-main': isGalleryImmersive }">
-      <header v-if="!isGalleryImmersive" class="shell-header glass">
+      <header v-if="!isGalleryImmersive" class="shell-header glass" :class="{ 'shell-header--hidden': headerHidden }" ref="headerRef">
         <div class="shell-header-copy">
           <span class="eyebrow">{{ t('brand') }}</span>
           <div class="shell-header-block">
@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
@@ -97,6 +97,40 @@ const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
 const sidebarCollapsed = ref(false)
+const headerRef = ref<HTMLElement | null>(null)
+
+// ─── Auto-hide header on scroll ───
+const headerHidden = ref(false)
+let lastScrollY = 0
+let ticking = false
+const SCROLL_THRESHOLD = 5
+const HIDE_DISTANCE = 80
+
+function handleScroll() {
+  if (ticking) return
+  ticking = true
+  requestAnimationFrame(() => {
+    const currentY = window.scrollY
+    const delta = currentY - lastScrollY
+
+    if (delta > SCROLL_THRESHOLD && currentY > HIDE_DISTANCE) {
+      headerHidden.value = true
+    } else if (delta < -SCROLL_THRESHOLD) {
+      headerHidden.value = false
+    }
+
+    lastScrollY = currentY < 0 ? 0 : currentY
+    ticking = false
+  })
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
 const sessionQuery = useQuery({
   queryKey: ['session'],
@@ -336,6 +370,13 @@ async function logout() {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+}
+
+.shell-header--hidden {
+  transform: translateY(calc(-100% - var(--page-gutter) - 1rem));
+  opacity: 0;
+  pointer-events: none;
 }
 
 .shell-header-copy {
@@ -416,6 +457,12 @@ async function logout() {
     box-shadow: 0 16px 34px rgba(196, 164, 149, 0.16);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
+  }
+
+  .shell-header--hidden {
+    transform: translateY(calc(-100% - 1rem));
+    opacity: 0;
+    pointer-events: none;
   }
 
   .shell-header-title {

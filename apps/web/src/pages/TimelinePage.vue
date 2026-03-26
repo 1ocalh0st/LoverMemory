@@ -65,7 +65,7 @@
         :key="memory.id"
         class="timeline-node"
         :class="[
-          Number(idx) % 2 === 0 ? 'node-left' : 'node-right',
+          getNodeLayout(Number(idx)),
           { 'timeline-node--continued': !shouldShowDate(memory, Number(idx)) },
           { 'memory-card--recent': recentMemoryAnnouncement?.id === memory.id }
         ]"
@@ -78,6 +78,7 @@
 
         <!-- Card -->
         <div class="section-card memory-card">
+          <!-- Stacked image display -->
           <div
             v-if="memoryAssetCount(memory) > 0"
             class="memory-cover"
@@ -113,18 +114,11 @@
                 />
 
                 <div v-if="memoryAssetCount(memory) > 1" class="memory-cover-indicator">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path
                       d="M8.5 7.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2z"
                       stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M5.5 10.5v6a2 2 0 0 0 2 2h6"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
+                      stroke-width="2"
                       stroke-linejoin="round"
                     />
                   </svg>
@@ -569,6 +563,24 @@ function shouldShowDate(memory: any, index: number) {
 
   return dateGroupKey(memory.occurredAt) !== dateGroupKey(previous.occurredAt)
 }
+
+/**
+ * Create a more dynamic layout pattern instead of simple left-right alternation.
+ * Pattern: left, right, left-wide, right, left, right-wide, ...
+ * Gives visual variety on the PC timeline.
+ */
+function getNodeLayout(index: number) {
+  const cycle = index % 6
+  switch (cycle) {
+    case 0: return 'node-left'
+    case 1: return 'node-right'
+    case 2: return 'node-left node-wide'
+    case 3: return 'node-right'
+    case 4: return 'node-left'
+    case 5: return 'node-right node-wide'
+    default: return 'node-left'
+  }
+}
 </script>
 
 <style scoped>
@@ -726,11 +738,16 @@ function shouldShowDate(memory: any, index: number) {
 }
 
 .memory-card {
-  max-width: 480px;
+  max-width: 440px;
   width: 100%;
   display: grid;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+/* Wider cards in dynamic layout */
+.node-wide .memory-card {
+  max-width: 500px;
 }
 
 .memory-card--recent {
@@ -739,10 +756,11 @@ function shouldShowDate(memory: any, index: number) {
     inset 0 0 0 1px rgba(207, 140, 128, 0.34);
 }
 
+/* ── Stacked Photo Display ── */
 .memory-cover {
   position: relative;
   overflow: visible;
-  padding: 0.15rem 1.2rem 1.2rem 0.15rem;
+  padding: 0.3rem 1.3rem 1.3rem 0.3rem;
 }
 
 .memory-cover.is-interactive {
@@ -756,10 +774,10 @@ function shouldShowDate(memory: any, index: number) {
 .memory-cover.is-interactive:focus-visible .memory-cover-layer-front,
 .memory-cover.is-interactive:hover .memory-cover-layer-front {
   box-shadow:
-    0 22px 52px rgba(116, 79, 75, 0.18),
-    0 6px 14px rgba(116, 79, 75, 0.07),
-    0 0 0 3px rgba(255, 255, 255, 0.34),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.62);
+    0 24px 56px rgba(116, 79, 75, 0.2),
+    0 8px 18px rgba(116, 79, 75, 0.08),
+    0 0 0 3px rgba(255, 255, 255, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
 
 .memory-cover-stack {
@@ -770,24 +788,24 @@ function shouldShowDate(memory: any, index: number) {
 .memory-cover-layer {
   position: absolute;
   inset: 0 auto auto 0;
-  width: calc(100% - 1.2rem);
-  height: calc(100% - 1.2rem);
+  width: calc(100% - 1.3rem);
+  height: calc(100% - 1.3rem);
   overflow: hidden;
-  border-radius: 24px;
-  background: linear-gradient(180deg, rgba(255, 251, 248, 0.98), rgba(244, 233, 225, 0.88));
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fffff9, #fbf7f4);
   box-shadow:
-    0 18px 44px rgba(116, 79, 75, 0.14),
-    0 4px 10px rgba(116, 79, 75, 0.06),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.58);
+    0 16px 40px rgba(116, 79, 75, 0.12),
+    0 4px 12px rgba(116, 79, 75, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    filter 180ms ease;
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 280ms ease;
 }
 
 .memory-cover-layer-back {
   pointer-events: none;
-  filter: saturate(0.94) brightness(0.98);
+  filter: saturate(0.95) brightness(0.98);
 }
 
 .memory-cover-layer-front {
@@ -795,25 +813,33 @@ function shouldShowDate(memory: any, index: number) {
 }
 
 .memory-cover.is-interactive:hover .memory-cover-layer-front {
-  transform: translate(-0.08rem, -0.08rem);
+  transform: translate(-0.1rem, -0.1rem) scale(1.01);
 }
 
 .backdrop-1 {
   z-index: 1;
-  transform: translate(1.05rem, 0.95rem);
+  transform: translate(1.4rem, 1.2rem) rotate(3deg);
 }
 
 .backdrop-2 {
   z-index: 2;
-  transform: translate(0.56rem, 0.48rem);
+  transform: translate(0.7rem, 0.6rem) rotate(1.5deg);
+}
+
+.memory-cover.is-interactive:hover .backdrop-1 {
+  transform: translate(1.6rem, 1.4rem) rotate(4deg);
+}
+
+.memory-cover.is-interactive:hover .backdrop-2 {
+  transform: translate(0.8rem, 0.7rem) rotate(2deg);
 }
 
 .layers-2 .backdrop-1,
 .layers-3 .backdrop-2 {
   box-shadow:
-    0 15px 32px rgba(116, 79, 75, 0.12),
-    0 3px 8px rgba(116, 79, 75, 0.05),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.46);
+    0 14px 30px rgba(116, 79, 75, 0.1),
+    0 2px 8px rgba(116, 79, 75, 0.04),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
 .memory-cover-layer img {
@@ -826,24 +852,23 @@ function shouldShowDate(memory: any, index: number) {
   position: absolute;
   top: 0.8rem;
   right: 0.8rem;
-  min-width: 2.5rem;
-  min-height: 2rem;
-  padding: 0.42rem 0.62rem;
+  min-width: 2.2rem;
+  min-height: 1.8rem;
+  padding: 0.35rem 0.55rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  place-items: center;
-  color: rgba(255, 249, 246, 0.96);
-  background: rgba(32, 24, 24, 0.42);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  color: rgba(255, 249, 246, 0.98);
+  background: rgba(42, 32, 32, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   box-shadow:
-    0 10px 24px rgba(39, 28, 29, 0.14),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.16);
-  font-size: 0.78rem;
+    0 8px 24px rgba(39, 28, 29, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   z-index: 4;
 }
 
@@ -853,7 +878,8 @@ function shouldShowDate(memory: any, index: number) {
 
 .memory-card-body {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.85rem;
+  padding: 0 0.5rem 0.5rem;
 }
 
 .memory-meta {
@@ -869,7 +895,7 @@ function shouldShowDate(memory: any, index: number) {
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.55rem;
+  gap: 0.5rem;
 }
 
 .memory-date {
@@ -879,25 +905,24 @@ function shouldShowDate(memory: any, index: number) {
 }
 
 .memory-time,
-.memory-mood,
-.memory-location {
+.memory-mood {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   color: var(--text-soft);
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: inset 0 0 0 1px var(--outline);
-  border-radius: 999px;
-  padding: 0.45rem 0.72rem;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
 
 .memory-time {
-  color: var(--accent-strong);
-  background: rgba(255, 242, 235, 0.88);
+  color: #ab6a61;
+  background: rgba(255, 244, 238, 0.82);
+  box-shadow: none;
   letter-spacing: 0.06em;
 }
 
@@ -905,27 +930,35 @@ function shouldShowDate(memory: any, index: number) {
   display: inline-flex;
   align-items: center;
   color: #fff8f4;
-  background:
-    radial-gradient(circle at top right, rgba(255, 223, 207, 0.5), transparent 36%),
-    linear-gradient(135deg, #a5666d 0%, #d08b8a 100%);
-  box-shadow: var(--shadow-glow);
-  border-radius: 999px;
-  padding: 0.45rem 0.72rem;
-  font-size: 0.76rem;
+  background: linear-gradient(135deg, #b07074 0%, #d69896 100%);
+  box-shadow: 0 4px 12px rgba(176, 112, 116, 0.25);
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .memory-mood {
-  text-transform: none;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 
 .memory-location {
+  justify-self: end;
   width: fit-content;
-  letter-spacing: 0.02em;
-  text-transform: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  margin-top: 0.4rem;
+  color: var(--text-soft);
+  font-family: "Optima", "Georgia", serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
 }
 
 .composer-overlay {
@@ -1143,12 +1176,13 @@ function shouldShowDate(memory: any, index: number) {
   }
 
   .memory-card {
-    gap: 0.85rem;
-    padding: 0.95rem;
+    gap: 1.1rem;
+    padding: 1.1rem;
   }
 
   .memory-card-body {
-    gap: 0.65rem;
+    gap: 0.75rem;
+    padding: 0 0.2rem 0.3rem;
   }
 
   .memory-meta-tags {
@@ -1178,26 +1212,33 @@ function shouldShowDate(memory: any, index: number) {
   }
 
   .memory-card {
-    border-radius: 26px;
-  }
-
-  .memory-cover {
-    padding-right: 0.9rem;
-    padding-bottom: 0.92rem;
-  }
-
-  .memory-cover-layer {
-    width: calc(100% - 0.92rem);
-    height: calc(100% - 0.92rem);
     border-radius: 22px;
   }
 
+  .memory-cover {
+    padding: 0.15rem 1.1rem 1.1rem 0.15rem;
+  }
+
+  .memory-cover-layer {
+    width: calc(100% - 1.1rem);
+    height: calc(100% - 1.1rem);
+    border-radius: 18px;
+  }
+
   .backdrop-1 {
-    transform: translate(0.9rem, 0.82rem);
+    transform: translate(1.1rem, 0.95rem) rotate(2deg);
   }
 
   .backdrop-2 {
-    transform: translate(0.46rem, 0.4rem);
+    transform: translate(0.55rem, 0.45rem) rotate(1deg);
+  }
+
+  .memory-cover.is-interactive:hover .backdrop-1 {
+    transform: translate(1.4rem, 1.2rem) rotate(3deg);
+  }
+
+  .memory-cover.is-interactive:hover .backdrop-2 {
+    transform: translate(0.7rem, 0.6rem) rotate(1.5deg);
   }
 }
 
