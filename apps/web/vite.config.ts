@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
           name: 'LoverMemory',
           short_name: 'LoverMemory',
           description: 'A private two-person memory capsule.',
-          theme_color: '#fffaf5',
+          theme_color: '#fff2eb',
           background_color: '#fffaf5',
           display: 'standalone',
           start_url: '/',

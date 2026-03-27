@@ -18,9 +18,8 @@
           <VueDatePicker
             v-model="form.targetDate"
             :locale="datepickerLocale"
-            format="yyyy-MM-dd"
-            model-type="yyyy-MM-dd"
-            :enable-time-picker="false"
+            format="yyyy-MM-dd, HH:mm"
+            :enable-time-picker="true"
             auto-apply
             :clearable="false"
             input-class-name="custom-dp-input"
@@ -101,7 +100,7 @@ import { useI18n } from 'vue-i18n'
 import { enUS, zhCN } from 'date-fns/locale'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import { api, ApiError } from '@/lib/api'
-import { formatDateInAppTimeZone, getCurrentDateInputValue, getDatePartsInAppTimeZone } from '@/lib/datetime'
+import { formatDateInAppTimeZone, getDatePartsInAppTimeZone } from '@/lib/datetime'
 
 const { t, locale } = useI18n()
 const queryClient = useQueryClient()
@@ -116,6 +115,24 @@ const typeOptions = [
 ]
 
 const form = ref(createAnniversaryForm())
+
+// High-timeliness sync: update default date every minute if form is untouched
+let refreshTimer: any = null
+import { onMounted, onUnmounted } from 'vue'
+
+function refreshDefaultDate() {
+  if (!editing.value && !form.value.title.trim() && !form.value.note.trim()) {
+    form.value.targetDate = new Date()
+  }
+}
+
+onMounted(() => {
+  refreshTimer = setInterval(refreshDefaultDate, 60000)
+})
+
+onUnmounted(() => {
+  if (refreshTimer) clearInterval(refreshTimer)
+})
 
 const anniversaryQuery = useQuery({
   queryKey: ['anniversaries'],
@@ -132,7 +149,7 @@ async function save() {
   try {
     const payload = {
       title: form.value.title.trim(),
-      targetDate: new Date(form.value.targetDate).toISOString(),
+      targetDate: form.value.targetDate instanceof Date ? form.value.targetDate.toISOString() : new Date(form.value.targetDate).toISOString(),
       type: form.value.type,
       note: form.value.note.trim() || undefined,
       reminderDays: form.value.reminderDays
@@ -185,7 +202,7 @@ function startEdit(item: any) {
   editing.value = item.id
   form.value = {
     title: item.title,
-    targetDate: item.targetDate.slice(0, 10),
+    targetDate: new Date(item.targetDate),
     type: item.type,
     reminderDays: (item.reminderDays ?? []).join(', '),
     note: item.note ?? ''
@@ -222,7 +239,7 @@ function computeDays(item: any) {
 function createAnniversaryForm() {
   return {
     title: '',
-    targetDate: getCurrentDateInputValue(),
+    targetDate: new Date(),
     type: 'countdown',
     reminderDays: '30,7,1',
     note: ''
@@ -230,7 +247,13 @@ function createAnniversaryForm() {
 }
 
 function formatAnniversaryDate(value: string) {
-  return formatDateInAppTimeZone(value)
+  return formatDateInAppTimeZone(value, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 </script>
 
@@ -254,7 +277,7 @@ function formatAnniversaryDate(value: string) {
 .anniversary-form-grid,
 .anniversary-grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .anniversary-form-grid {
@@ -265,6 +288,7 @@ function formatAnniversaryDate(value: string) {
   display: flex;
   justify-content: flex-start;
   gap: 0.8rem;
+  margin-top: 0.5rem;
 }
 
 .anniversary-grid {

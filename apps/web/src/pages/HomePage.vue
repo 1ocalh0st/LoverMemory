@@ -187,12 +187,26 @@ function formatMemoryDate(value: string) {
 }
 
 .home-stat-card {
+  position: relative;
+  overflow: hidden;
   padding: 1rem;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: inset 0 0 0 1px var(--outline);
+  border-radius: var(--radius-xl);
+  background: var(--liquid-bg);
+  border: var(--liquid-border-subtle);
+  backdrop-filter: var(--liquid-blur-sm);
+  -webkit-backdrop-filter: var(--liquid-blur-sm);
+  box-shadow: var(--liquid-shadow);
   display: grid;
   gap: 0.35rem;
+}
+
+.home-stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--liquid-specular-sm);
+  pointer-events: none;
 }
 
 .home-stat-card span {
@@ -234,7 +248,9 @@ function formatMemoryDate(value: string) {
 }
 
 .recent-item--new {
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(10px) saturate(1.3);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
   box-shadow: inset 0 0 0 1px rgba(207, 140, 128, 0.24);
 }
 

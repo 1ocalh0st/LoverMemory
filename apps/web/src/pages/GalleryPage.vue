@@ -127,7 +127,7 @@ function leaveGallery() {
   position: relative;
   min-height: 100vh;
   gap: 0;
-  padding: clamp(0.6rem, 1.5vw, 1.2rem);
+  padding: clamp(0.4rem, 1vw, 0.8rem) clamp(0.6rem, 1.5vw, 1.2rem) clamp(0.6rem, 1.5vw, 1.2rem);
 }
 
 /* ─── CSS-columns Masonry (natural height, real waterfall) ─── */
@@ -296,7 +296,7 @@ function leaveGallery() {
   .radius-v4 { border-radius: 18px 10px 20px 10px; }
 
   .gallery-exit {
-    top: 0.65rem;
+    top: calc(env(safe-area-inset-top, 0px) + 0.65rem);
     left: 0.65rem;
     width: 2.6rem;
     min-width: 2.6rem;

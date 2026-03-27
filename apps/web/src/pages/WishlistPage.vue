@@ -316,6 +316,7 @@ function cancelEdit() {
   display: flex;
   justify-content: flex-start;
   gap: 0.8rem;
+  margin-top: 0.5rem;
 }
 
 .wishlist-filters {

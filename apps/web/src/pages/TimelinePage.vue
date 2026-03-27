@@ -697,7 +697,9 @@ function getNodeLayout(index: number) {
   justify-content: center;
   padding: 0.55rem 1rem;
   border-radius: 999px;
-  background: var(--surface-strong);
+  background: var(--surface);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
   border: 1px solid var(--outline);
   box-shadow: 0 8px 20px rgba(170, 130, 119, 0.1);
   color: var(--accent-strong);
@@ -1139,8 +1141,8 @@ function getNodeLayout(index: number) {
   }
 
   .timeline-axis {
-    left: 0.55rem;
-    width: 1px;
+    left: 0.85rem;
+    width: 2px;
   }
 
   .timeline-node {
@@ -1153,7 +1155,7 @@ function getNodeLayout(index: number) {
     grid-column: 1;
     grid-row: 1;
     justify-self: start;
-    margin-left: 1.35rem;
+    margin-left: 2rem;
     padding: 0.46rem 0.82rem;
     font-size: 0.74rem;
   }
@@ -1161,8 +1163,10 @@ function getNodeLayout(index: number) {
   .timeline-node-marker {
     grid-column: 1;
     justify-self: start;
-    margin-left: 0.1rem;
+    margin-left: 0.4rem;
     margin-top: 0.62rem;
+    width: 0.85rem;
+    height: 0.85rem;
   }
 
   .node-left .memory-card,
@@ -1171,8 +1175,8 @@ function getNodeLayout(index: number) {
     grid-row: auto;
     justify-self: end;
     max-width: none;
-    width: calc(100% - 1.45rem);
-    margin-left: 1.45rem;
+    width: calc(100% - 2.2rem);
+    margin-left: 2.2rem;
   }
 
   .memory-card {
@@ -1201,14 +1205,24 @@ function getNodeLayout(index: number) {
     border-radius: 24px;
   }
 
+  .timeline-axis {
+    left: 0.75rem;
+  }
+
+  .timeline-node-marker {
+    margin-left: 0.35rem;
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+
   .timeline-date-bubble {
-    margin-left: 1.18rem;
+    margin-left: 1.8rem;
   }
 
   .node-left .memory-card,
   .node-right .memory-card {
-    width: calc(100% - 1.22rem);
-    margin-left: 1.22rem;
+    width: calc(100% - 2rem);
+    margin-left: 2rem;
   }
 
   .memory-card {
