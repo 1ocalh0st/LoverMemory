@@ -78,6 +78,7 @@ if (-not $SkipMigrate) {
 
 Write-Host "Opening dev service terminals..."
 Start-DevWindow -Title "LoverMemory API" -Command "npm run dev:api"
+Start-DevWindow -Title "LoverMemory Prism Studio" -Command "Set-Location apps/api; npx prisma studio"
 Start-DevWindow -Title "LoverMemory Web" -Command "npm run dev:web"
 Start-DevWindow -Title "LoverMemory Worker" -Command "npm run dev:worker"
 

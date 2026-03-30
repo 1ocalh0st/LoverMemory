@@ -115,6 +115,7 @@ html {
     radial-gradient(circle at 85% 12%, var(--page-glow-2), transparent 28%),
     linear-gradient(180deg, var(--page-base-top) 0%, var(--page-base-middle) 52%, var(--page-base-bottom) 100%);
   background-attachment: fixed;
+  background-color: var(--page-base-top);
 }
 
 body {
@@ -126,6 +127,9 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   position: relative;
+  /* 修复移动端滑动手感与溢出白屏 */
+  overscroll-behavior-y: none;
+  background: var(--page-base-bottom); 
 }
 
 body::before,
@@ -247,6 +251,12 @@ h3,
   backdrop-filter: var(--liquid-blur);
   -webkit-backdrop-filter: var(--liquid-blur);
   box-shadow: var(--liquid-shadow);
+  /* 修复移动端闪烁：强制硬件加速 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000;
+  -webkit-perspective: 1000;
 }
 
 .page {
@@ -279,6 +289,14 @@ h3,
   -webkit-backdrop-filter: var(--liquid-blur);
   box-shadow: var(--liquid-shadow);
   transition: box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1), transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* 优化渲染：指示其为独立布局单元 */
+  contain: layout;
+  /* 硬件加速与重绘优化 */
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
+  /* 强制生成新的 Stacking Context 隔离滤镜开销 */
+  z-index: 0;
+  isolation: isolate;
 }
 
 .section-card:hover {
@@ -322,6 +340,8 @@ h3,
   box-shadow: var(--liquid-shadow);
   text-align: center;
   color: var(--text-soft);
+  /* 页面核心容器强制分层 */
+  transform: translateZ(0);
 }
 
 .empty-state::before {
@@ -767,5 +787,17 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
   .button-icon:hover,
   .pill-button:hover {
     transform: none;
+  }
+
+  /* 移动端白屏闪烁专项优化 */
+  .shell-header,
+  .shell-mobile-nav,
+  .section-card,
+  .glass {
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+    /* 极致平滑：防止在转场中发生布局震荡 */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
 }

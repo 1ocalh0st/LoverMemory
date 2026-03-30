@@ -380,6 +380,8 @@ async function logout() {
   justify-content: space-between;
   gap: 1rem;
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
 .shell-header--hidden {
@@ -467,6 +469,8 @@ async function logout() {
     -webkit-backdrop-filter: var(--liquid-blur);
     box-shadow: var(--liquid-shadow);
     transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+    will-change: transform, opacity;
+    transform: translateZ(0);
   }
 
   .shell-header--hidden {
@@ -525,6 +529,7 @@ async function logout() {
     backdrop-filter: var(--liquid-blur);
     -webkit-backdrop-filter: var(--liquid-blur);
     box-shadow: var(--liquid-shadow-float);
+    will-change: transform;
   }
 
   .shell-mobile-link {
