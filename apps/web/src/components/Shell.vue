@@ -67,7 +67,13 @@
       </header>
 
       <main class="shell-content" :class="{ 'immersive-gallery-content': isGalleryImmersive }">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <Suspense>
+            <Transition name="page-fade" mode="out-in">
+              <component :is="Component" :key="route.path" />
+            </Transition>
+          </Suspense>
+        </RouterView>
       </main>
     </div>
 
@@ -578,5 +584,16 @@ async function logout() {
     left: calc(0.4rem + var(--safe-left));
     right: calc(0.4rem + var(--safe-right));
   }
+}
+
+/* 页面路由切换过渡动画 */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.page-fade-enter-from,
+.page-fade-leave-to {
+  opacity: 0;
 }
 </style>

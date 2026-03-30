@@ -59,7 +59,6 @@
 
     <section v-if="memoriesQuery.data.value?.items.length" class="timeline-river">
       <div class="timeline-axis"></div>
-
       <article
         v-for="(memory, idx) in memoriesQuery.data.value?.items"
         :key="memory.id"
@@ -70,15 +69,15 @@
           { 'memory-card--recent': recentMemoryAnnouncement?.id === memory.id }
         ]"
       >
-        <!-- Date bubble on the axis -->
-        <div v-if="shouldShowDate(memory, Number(idx))" class="timeline-date-bubble">
-          <span>{{ formatDate(memory.occurredAt) }}</span>
+        <div v-if="shouldShowDate(memory, Number(idx))" class="timeline-date-bubble glass">
+          {{ formatDate(memory.occurredAt) }}
         </div>
-        <div v-else class="timeline-node-marker" aria-hidden="true"></div>
-
-        <!-- Card -->
-        <div class="section-card memory-card">
-          <!-- Stacked image display -->
+        <div class="timeline-node-marker"></div>
+        <div
+          class="memory-card glass"
+          :class="{ 'cursor-pointer': memoryAssetCount(memory) > 0 }"
+          @click="openMemoryGallery(memory)"
+        >
           <div
             v-if="memoryAssetCount(memory) > 0"
             class="memory-cover"
@@ -152,213 +151,45 @@
       @close="closeMemoryGallery"
     />
 
-    <Teleport to="body">
-      <div v-if="openComposer" class="composer-overlay" @click.self="closeComposer">
-        <div class="composer-sheet glass">
-          <div class="composer-handle"></div>
-
-          <div class="composer-header">
-            <div class="composer-header-copy">
-              <strong class="headline-md">{{ t('actions.addMemory') }}</strong>
-              <p class="helper-copy">照片会优先上传，随后这段回忆将以精致卡片的形式保存在你的日记本中。</p>
-            </div>
-            <button class="button-icon composer-close" aria-label="Close composer" @click="closeComposer">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 6L6 18M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-
-          <div class="composer-scroll">
-            <section class="section-card composer-card">
-              <div class="composer-grid">
-                <label class="field-block">
-                  <span class="field-label">标题</span>
-                  <input v-model="form.title" class="field" placeholder="晚间咖啡、初雪、落日列车..." />
-                </label>
-
-                <label class="field-block">
-                  <span class="field-label">时间</span>
-                  <VueDatePicker
-                    v-model="form.occurredAt"
-                    :locale="datepickerLocale"
-                    format="yyyy-MM-dd HH:mm"
-                    model-type="yyyy-MM-dd'T'HH:mm"
-                    :enable-time-picker="true"
-                    auto-apply
-                    :clearable="false"
-                    input-class-name="custom-dp-input"
-                    hide-input-icon
-                  />
-                </label>
-              </div>
-
-              <label class="field-block">
-                <span class="field-label">心情</span>
-                <div class="pill-row is-scrollable mood-row">
-                  <button
-                    v-for="option in moodOptions.filter((item) => item.value)"
-                    :key="option.value"
-                    class="pill-button"
-                    :class="{ active: form.mood === option.value }"
-                    @click="form.mood = option.value"
-                  >
-                    {{ option.label }}
-                  </button>
-                </div>
-                <input
-                  v-model="form.customMood"
-                  class="field mood-custom-field"
-                  placeholder="自定义心情（可选）"
-                  maxlength="32"
-                />
-              </label>
-
-              <label class="field-block">
-                <span class="field-label">地点</span>
-                <input v-model="form.locationName" class="field" placeholder="咖啡馆、车站、城市、小巷..." />
-              </label>
-
-              <label class="field-block">
-                <span class="field-label">故事</span>
-                <textarea
-                  v-model="form.story"
-                  class="textarea"
-                  rows="6"
-                  placeholder="写下发生了什么，有着怎样的气味，那些你几乎快要淡忘的细节..."
-                ></textarea>
-              </label>
-            </section>
-
-            <section class="section-card composer-card">
-              <div class="upload-card">
-                <div class="upload-copy">
-                  <span class="field-label">照片集</span>
-                  <strong>添加那些定格瞬间的照片。</strong>
-                  <p class="helper-copy">
-                    {{
-                      uploading
-                        ? '正在上传选中的图片...'
-                        : uploadedAssets.length
-                          ? `已有 ${uploadedAssets.length} 张图片准备保存。`
-                          : '为这段回忆选择一张或多张照片。'
-                    }}
-                  </p>
-                </div>
-
-                <div class="upload-actions">
-                  <input
-                    ref="fileInput"
-                    class="visually-hidden"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    :disabled="uploading || saving"
-                    @change="handleFileSelection"
-                  />
-                  <button class="button-secondary" :disabled="uploading || saving" @click="triggerFilePicker">
-                    选择照片
-                  </button>
-                </div>
-
-                <div v-if="uploadedAssets.length" class="selected-files">
-                  <div v-for="asset in uploadedAssets" :key="asset.assetId" class="selected-file-card">
-                    <img :src="asset.previewUrl" :alt="asset.name" class="selected-file-thumb" />
-                    <span>{{ asset.name }}</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <p v-if="composerError" class="composer-error">{{ composerError }}</p>
-          </div>
-
-          <div class="composer-actions">
-            <button class="button-ghost" @click="closeComposer">{{ t('actions.cancel') }}</button>
-            <button class="button-primary" :disabled="saving || uploading" @click="saveMemory">
-              {{ uploading ? '上传中...' : saving ? '保存中...' : t('actions.save') }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <MemoryComposer
+      v-model="openComposer"
+      @saved="onMemorySaved"
+    />
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
-import { enUS, zhCN } from 'date-fns/locale'
-import { VueDatePicker } from '@vuepic/vue-datepicker'
 import LightboxModal from '@/components/LightboxModal.vue'
 import RecentMemoryNotice from '@/components/RecentMemoryNotice.vue'
-import { api, ApiError, resolveApiAssetUrl } from '@/lib/api'
-import { dateTimeLocalToIso, formatDateInAppTimeZone, getCurrentDateTimeLocalValue, getDatePartsInAppTimeZone } from '@/lib/datetime'
+import MemoryComposer from '@/components/MemoryComposer.vue'
+import { api, resolveApiAssetUrl } from '@/lib/api'
+import { formatDateInAppTimeZone, getDatePartsInAppTimeZone } from '@/lib/datetime'
 import {
   clearRecentMemoryAnnouncement,
-  readRecentMemoryAnnouncement,
-  writeRecentMemoryAnnouncement
+  readRecentMemoryAnnouncement
 } from '@/lib/recentMemoryAnnouncement'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const queryClient = useQueryClient()
 
 const search = ref('')
 const mood = ref('')
 const openComposer = ref(route.query.compose === '1')
-const saving = ref(false)
-const uploading = ref(false)
-const composerError = ref('')
-const fileInput = ref<HTMLInputElement | null>(null)
 const activeMemoryGallery = ref<any | null>(null)
 const recentMemoryAnnouncement = ref(readRecentMemoryAnnouncement())
-const datepickerLocale = computed(() => (locale.value === 'zh' ? zhCN : enUS))
-
-type UploadedAsset = {
-  assetId: string
-  name: string
-  previewUrl: string
-}
-
-const uploadedAssets = ref<UploadedAsset[]>([])
-const lastAutoOccurredAt = ref(getCurrentDateTimeLocalValue())
-
-const form = ref(createMemoryForm())
 
 watch(
   () => route.query.compose,
   (value) => {
     openComposer.value = value === '1'
-    if (openComposer.value) {
-      refreshComposerOccurredAt()
-    }
   }
 )
-
-function createMemoryForm() {
-  const occurredAt = getCurrentDateTimeLocalValue()
-  lastAutoOccurredAt.value = occurredAt
-  return {
-    title: '',
-    occurredAt,
-    mood: 'romantic',
-    customMood: '',
-    locationName: '',
-    story: ''
-  }
-}
-
-function refreshComposerOccurredAt() {
-  if (!form.value.occurredAt || form.value.occurredAt === lastAutoOccurredAt.value) {
-    const occurredAt = getCurrentDateTimeLocalValue()
-    form.value.occurredAt = occurredAt
-    lastAutoOccurredAt.value = occurredAt
-  }
-}
 
 const moodOptions = [
   { value: '', label: '所有心情' },
@@ -440,99 +271,19 @@ function dismissRecentMemoryAnnouncement() {
 }
 
 function showComposer() {
-  refreshComposerOccurredAt()
   openComposer.value = true
   router.replace({ name: 'timeline', query: { compose: '1' } })
 }
 
-function closeComposer() {
-  openComposer.value = false
-  composerError.value = ''
-  resetUploads()
-  router.replace({ name: 'timeline' })
-}
-
-function triggerFilePicker() {
-  fileInput.value?.click()
-}
-
-function resetUploads() {
-  for (const asset of uploadedAssets.value) {
-    URL.revokeObjectURL(asset.previewUrl)
+// 子组件关闭时同步路由
+watch(openComposer, (val) => {
+  if (!val && route.query.compose) {
+    router.replace({ name: 'timeline' })
   }
-  uploadedAssets.value = []
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
-}
+})
 
-async function handleFileSelection(event: Event) {
-  const input = event.target as HTMLInputElement | null
-  const files = Array.from(input?.files ?? [])
-  if (!files.length) {
-    return
-  }
-
-  uploading.value = true
-  composerError.value = ''
-  const nextAssets: UploadedAsset[] = []
-
-  try {
-    resetUploads()
-    for (const file of files) {
-      const body = new FormData()
-      body.append('file', file, file.name)
-      const uploaded = await api<any>('/uploads/direct', {
-        method: 'POST',
-        body
-      })
-      nextAssets.push({
-        assetId: uploaded.assetId,
-        name: file.name,
-        previewUrl: URL.createObjectURL(file)
-      })
-    }
-    uploadedAssets.value = nextAssets
-  } catch (cause) {
-    for (const asset of nextAssets) {
-      URL.revokeObjectURL(asset.previewUrl)
-    }
-    composerError.value = cause instanceof ApiError ? cause.message : 'Unable to upload image'
-    resetUploads()
-  } finally {
-    uploading.value = false
-  }
-}
-
-async function saveMemory() {
-  saving.value = true
-  composerError.value = ''
-  try {
-    const assetIds = uploadedAssets.value.map((asset) => asset.assetId)
-    const createdMemory = await api<any>('/memories', {
-      method: 'POST',
-      body: JSON.stringify({
-        ...form.value,
-        occurredAt: dateTimeLocalToIso(form.value.occurredAt),
-        customMood: form.value.customMood.trim() || undefined,
-        assetIds,
-        coverAssetId: assetIds[0]
-      })
-    })
-    recentMemoryAnnouncement.value = writeRecentMemoryAnnouncement(createdMemory)
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['memories'] }),
-      queryClient.invalidateQueries({ queryKey: ['home'] }),
-      queryClient.invalidateQueries({ queryKey: ['gallery'] })
-    ])
-    form.value = createMemoryForm()
-    resetUploads()
-    closeComposer()
-  } catch (cause) {
-    composerError.value = cause instanceof ApiError ? cause.message : 'Unable to save memory'
-  } finally {
-    saving.value = false
-  }
+function onMemorySaved(announcement: any) {
+  recentMemoryAnnouncement.value = announcement
 }
 
 function formatDate(value: string) {
@@ -564,11 +315,6 @@ function shouldShowDate(memory: any, index: number) {
   return dateGroupKey(memory.occurredAt) !== dateGroupKey(previous.occurredAt)
 }
 
-/**
- * Create a more dynamic layout pattern instead of simple left-right alternation.
- * Pattern: left, right, left-wide, right, left, right-wide, ...
- * Gives visual variety on the PC timeline.
- */
 function getNodeLayout(index: number) {
   const cycle = index % 6
   switch (cycle) {
@@ -668,7 +414,9 @@ function getNodeLayout(index: number) {
   padding-block: 1.7rem 1.1rem;
 }
 
-.timeline-axis {
+/* 添加到 .timeline-river 的伪元素实现时间轴线 */
+.timeline-river::before {
+  content: '';
   position: absolute;
   top: 0;
   bottom: 0;
@@ -677,6 +425,12 @@ function getNodeLayout(index: number) {
   background: linear-gradient(180deg, transparent 0%, var(--outline-strong) 6%, var(--outline-strong) 94%, transparent 100%);
   transform: translateX(-50%);
   pointer-events: none;
+}
+@media (max-width: 980px) {
+  .timeline-axis {
+    width: 1.5px;
+    opacity: 0.6;
+  }
 }
 
 .timeline-node {
@@ -702,11 +456,10 @@ function getNodeLayout(index: number) {
   -webkit-backdrop-filter: blur(16px) saturate(1.5);
   border: 1px solid var(--outline);
   box-shadow: 0 8px 20px rgba(170, 130, 119, 0.1);
-  color: var(--accent-strong);
-  font-weight: 800;
   font-size: 0.82rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  transform: translateZ(0); 
 }
 
 .timeline-node-marker {
@@ -963,169 +716,7 @@ function getNodeLayout(index: number) {
   opacity: 0.7;
 }
 
-.composer-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: rgba(39, 28, 29, 0.34);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-}
 
-.composer-sheet {
-  width: min(920px, calc(100vw - 2rem));
-  max-width: 100%;
-  height: min(840px, calc(100dvh - 2rem));
-  max-height: calc(100dvh - 2rem);
-  border-radius: 32px;
-  padding: 1rem 1rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  overflow: hidden;
-}
-
-.composer-handle {
-  width: 4rem;
-  height: 0.32rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.66);
-  justify-self: center;
-}
-
-.composer-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: flex-start;
-  gap: 1rem;
-  min-width: 0;
-  flex: 0 0 auto;
-}
-
-.composer-header-copy {
-  display: grid;
-  gap: 0.7rem;
-  min-width: 0;
-}
-
-.composer-header-copy strong,
-.upload-copy strong {
-  margin: 0;
-}
-
-.composer-scroll {
-  min-height: 0;
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0 0.25rem 0.25rem 0;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.composer-scroll::-webkit-scrollbar {
-  width: 8px;
-}
-
-.composer-scroll::-webkit-scrollbar-track {
-  background: transparent;
-  margin-block: 0.5rem;
-}
-
-.composer-scroll::-webkit-scrollbar-thumb {
-  background-color: var(--outline-strong);
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-.composer-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(148, 115, 112, 0.44);
-}
-
-.composer-card {
-  display: grid;
-  gap: 1rem;
-  min-width: 0;
-  overflow: visible;
-  padding: 1.5rem;
-}
-
-.composer-card::before {
-  display: none;
-}
-
-.composer-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  min-width: 0;
-}
-
-.upload-card {
-  display: grid;
-  gap: 1rem;
-}
-
-.upload-copy {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.upload-actions {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.selected-files {
-  display: grid;
-  gap: 0.8rem;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-}
-
-.selected-file-card {
-  display: grid;
-  gap: 0.7rem;
-  padding: 0.8rem;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.56);
-  box-shadow: inset 0 0 0 1px var(--outline);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.selected-file-thumb {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-radius: 16px;
-}
-
-.composer-error {
-  margin: 0;
-  padding: 0.95rem 1rem;
-  border-radius: 20px;
-  background: rgba(201, 69, 89, 0.12);
-  color: #8b3141;
-  font-weight: 700;
-}
-
-.composer-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.8rem;
-  flex: 0 0 auto;
-  padding: 1rem 0 calc(0.95rem + env(safe-area-inset-bottom, 0px));
-  background: transparent;
-  border-top: 1px solid var(--outline);
-}
 
 @media (max-width: 980px) {
   .timeline-page {
@@ -1263,52 +854,6 @@ function getNodeLayout(index: number) {
 
   .timeline-mobile-action {
     display: block;
-  }
-
-  .composer-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .composer-overlay {
-    padding: 0;
-    place-items: end center;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(39, 28, 29, 0.5);
-  }
-
-  .composer-sheet {
-    width: 100vw;
-    max-width: 100vw;
-    max-height: 100svh;
-    height: 100svh;
-    border-radius: 28px 28px 0 0;
-    padding: 0.65rem 0.65rem 0;
-    gap: 0.75rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .composer-header {
-    gap: 0.75rem;
-  }
-
-  .composer-card {
-    padding: 1.15rem;
-  }
-
-  .composer-scroll {
-    padding-right: 0;
-  }
-
-  .composer-actions {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-
-  .composer-actions .button-ghost,
-  .composer-actions .button-primary {
-    width: 100%;
   }
 }
 </style>
