@@ -72,7 +72,7 @@
         <div v-if="shouldShowDate(memory, Number(idx))" class="timeline-date-bubble glass">
           {{ formatDate(memory.occurredAt) }}
         </div>
-        <div class="timeline-node-marker"></div>
+        <div v-if="!shouldShowDate(memory, Number(idx))" class="timeline-node-marker"></div>
         <div
           class="memory-card glass"
           :class="{ 'cursor-pointer': memoryAssetCount(memory) > 0 }"

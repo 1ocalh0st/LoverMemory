@@ -14,14 +14,29 @@
           {{ currentIndex + 1 }} / {{ normalizedItems.length }}
         </div>
 
+        <!-- Reset Zoom (Mobile/PC) -->
+        <Transition name="fade">
+          <button v-if="isZoomed" class="lightbox-reset" type="button" aria-label="Reset Zoom" @click="resetZoom">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span class="lightbox-tip-key">按 R</span>
+          </button>
+        </Transition>
+
         <!-- Main image area -->
         <div
           class="lightbox-stage"
-          :class="{ 'is-multi': hasMultiple }"
-          @touchstart.passive="handleTouchStart"
-          @touchmove.passive="handleTouchMove"
+          :class="{ 'is-multi': hasMultiple, 'is-zoomed': isZoomed }"
+          @touchstart="handleTouchStart"
+          @touchmove="handleTouchMove"
           @touchend="handleTouchEnd"
-          @touchcancel="resetSwipe"
+          @mousedown="handleMouseDown"
+          @mousemove="handleMouseMove"
+          @mouseup="handleMouseUp"
+          @mouseleave="handleMouseUp"
+          @wheel="handleWheel"
         >
           <div class="lightbox-track" :style="trackStyle">
             <div
@@ -29,7 +44,15 @@
               :key="`${item.src}-${index}`"
               class="lightbox-slide"
             >
-              <img :src="item.src" :alt="item.alt || ''" loading="lazy" decoding="async" />
+              <img
+                :src="item.src"
+                :alt="item.alt || ''"
+                :style="index === currentIndex ? activeImageStyle : {}"
+                loading="lazy"
+                decoding="async"
+                @click="handleImageClick"
+                @dblclick="toggleZoom"
+              />
             </div>
           </div>
         </div>
@@ -39,7 +62,7 @@
 
         <!-- Navigation arrows (PC) -->
         <button
-          v-if="hasMultiple"
+          v-if="hasMultiple && !isZoomed"
           class="lightbox-nav lightbox-nav-prev"
           type="button"
           aria-label="Previous image"
@@ -51,7 +74,7 @@
           </svg>
         </button>
         <button
-          v-if="hasMultiple"
+          v-if="hasMultiple && !isZoomed"
           class="lightbox-nav lightbox-nav-next"
           type="button"
           aria-label="Next image"
@@ -64,7 +87,7 @@
         </button>
 
         <!-- Filmstrip dots (mobile) / thumbnails (PC) -->
-        <div v-if="hasMultiple" class="lightbox-indicators">
+        <div v-if="hasMultiple && !isZoomed" class="lightbox-indicators">
           <button
             v-for="(item, index) in normalizedItems"
             :key="`thumb-${item.src}-${index}`"
@@ -119,7 +142,25 @@ const swipeStartY = ref(0)
 const swipeDeltaX = ref(0)
 const swipeDeltaY = ref(0)
 const swipeTracking = ref(false)
-const swipeAxis = ref<'pending' | 'horizontal' | 'vertical'>('pending')
+const swipeAxis = ref<'pending' | 'horizontal' | 'vertical' | 'zoom'>('pending')
+
+// Zoom state
+const scale = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+const isDragging = ref(false)
+const lastPinchDist = ref(0)
+const wasDragged = ref(false)
+const movedCount = ref(0)
+
+const isZoomed = computed(() => scale.value > 1.05)
+
+const activeImageStyle = computed(() => ({
+  transform: `translate3d(${panX.value}px, ${panY.value}px, 0) scale(${scale.value})`,
+  transition: isDragging.value || swipeAxis.value === 'zoom' ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)',
+  cursor: isZoomed.value ? (isDragging.value ? 'grabbing' : 'grab') : 'zoom-in',
+  touchAction: 'none'
+}))
 
 const normalizedItems = computed<LightboxItem[]>(() => {
   const items = props.items.filter((item) => item?.src)
@@ -131,14 +172,13 @@ const normalizedItems = computed<LightboxItem[]>(() => {
 
 const hasMultiple = computed(() => normalizedItems.value.length > 1)
 const currentItem = computed(() => normalizedItems.value[currentIndex.value] ?? normalizedItems.value[0] ?? null)
+
 const swipeOffsetX = computed(() => {
   if (!hasMultiple.value || !swipeTracking.value || swipeAxis.value !== 'horizontal') {
     return 0
   }
-
   const atLeadingEdge = currentIndex.value === 0 && swipeDeltaX.value > 0
   const atTrailingEdge = currentIndex.value === normalizedItems.value.length - 1 && swipeDeltaX.value < 0
-
   return atLeadingEdge || atTrailingEdge ? swipeDeltaX.value * 0.25 : swipeDeltaX.value
 })
 
@@ -151,19 +191,50 @@ const trackStyle = computed(() => {
   }
 })
 
+function resetZoom() {
+  scale.value = 1
+  panX.value = 0
+  panY.value = 0
+  isDragging.value = false
+  wasDragged.value = false
+  movedCount.value = 0
+}
+
+function toggleZoom(e?: MouseEvent) {
+  if (isZoomed.value) {
+    resetZoom()
+  } else {
+    scale.value = 2.5
+    // Optionally zoom towards mouse position
+    if (e) {
+      // Small refinement: centering zoom roughly could be done here if needed
+    }
+  }
+}
+
+function handleImageClick() {
+  if (isZoomed.value && !wasDragged.value) {
+    resetZoom()
+  }
+}
+
 watch(
   () => [props.open, props.startIndex, normalizedItems.value.length] as const,
   ([open, startIndex, total]) => {
     if (!open || !total) {
       currentIndex.value = 0
       resetSwipe()
+      resetZoom()
       return
     }
     currentIndex.value = clampIndex(startIndex, total)
     resetSwipe()
+    resetZoom()
   },
   { immediate: true }
 )
+
+watch(currentIndex, resetZoom)
 
 watch(
   () => props.open,
@@ -185,79 +256,143 @@ onBeforeUnmount(() => {
 })
 
 function clampIndex(index: number, total = normalizedItems.value.length) {
-  if (!total) {
-    return 0
-  }
+  if (!total) return 0
   return Math.min(Math.max(index, 0), total - 1)
 }
 
 function goTo(index: number) {
+  if (isZoomed.value) return
   currentIndex.value = clampIndex(index)
   resetSwipe()
 }
 
+function handleMouseDown(e: MouseEvent) {
+  if (!isZoomed.value) return
+  e.preventDefault()
+  isDragging.value = true
+  wasDragged.value = false
+  movedCount.value = 0
+  swipeStartX.value = e.clientX
+  swipeStartY.value = e.clientY
+}
+
+function handleMouseMove(e: MouseEvent) {
+  if (!isDragging.value) return
+  const dx = e.clientX - swipeStartX.value
+  const dy = e.clientY - swipeStartY.value
+  
+  movedCount.value += Math.abs(dx) + Math.abs(dy)
+  if (movedCount.value > 5) {
+    wasDragged.value = true
+  }
+
+  panX.value += dx
+  panY.value += dy
+  swipeStartX.value = e.clientX
+  swipeStartY.value = e.clientY
+}
+
+function handleMouseUp() {
+  isDragging.value = false
+}
+
+function getPinchDist(t1: Touch, t2: Touch) {
+  return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY)
+}
+
 function handleTouchStart(event: TouchEvent) {
-  if (!hasMultiple.value || event.touches.length !== 1) {
+  if (event.touches.length === 2) {
+    const t1 = event.touches[0]
+    const t2 = event.touches[1]
+    if (t1 && t2) {
+      swipeTracking.value = true
+      swipeAxis.value = 'zoom'
+      lastPinchDist.value = getPinchDist(t1, t2)
+    }
     return
   }
 
-  const touch = event.touches.item(0)
-  if (!touch) {
-    return
-  }
+  const touch = event.touches[0]
+  if (!touch) return
+
   swipeStartX.value = touch.clientX
   swipeStartY.value = touch.clientY
   swipeDeltaX.value = 0
   swipeDeltaY.value = 0
   swipeTracking.value = true
-  swipeAxis.value = 'pending'
+  swipeAxis.value = isZoomed.value ? 'vertical' : 'pending'
+  isDragging.value = isZoomed.value
+  wasDragged.value = false
+  movedCount.value = 0
 }
 
 function handleTouchMove(event: TouchEvent) {
-  if (!swipeTracking.value || event.touches.length !== 1) {
+  if (!swipeTracking.value) return
+
+  if (swipeAxis.value === 'zoom' && event.touches.length === 2) {
+    const t1 = event.touches[0]
+    const t2 = event.touches[1]
+    if (t1 && t2) {
+      const dist = getPinchDist(t1, t2)
+      const delta = dist / lastPinchDist.value
+      scale.value = Math.min(Math.max(scale.value * delta, 1), 5)
+      lastPinchDist.value = dist
+      wasDragged.value = true // Pinch always counts as moved
+    }
     return
   }
 
-  const touch = event.touches.item(0)
-  if (!touch) {
+  const touch = event.touches[0]
+  if (!touch) return
+  const dx = touch.clientX - swipeStartX.value
+  const dy = touch.clientY - swipeStartY.value
+
+  if (isZoomed.value) {
+    movedCount.value += Math.abs(dx) + Math.abs(dy)
+    if (movedCount.value > 5) wasDragged.value = true
+    
+    panX.value += dx
+    panY.value += dy
+    swipeStartX.value = touch.clientX
+    swipeStartY.value = touch.clientY
     return
   }
-  swipeDeltaX.value = touch.clientX - swipeStartX.value
-  swipeDeltaY.value = touch.clientY - swipeStartY.value
 
-  if (swipeAxis.value !== 'pending') {
-    return
+  swipeDeltaX.value = dx
+  swipeDeltaY.value = dy
+
+  if (swipeAxis.value === 'pending') {
+    const absX = Math.abs(dx)
+    const absY = Math.abs(dy)
+    if (absX < 10 && absY < 10) return
+    swipeAxis.value = absX > absY ? 'horizontal' : 'vertical'
   }
-
-  const absX = Math.abs(swipeDeltaX.value)
-  const absY = Math.abs(swipeDeltaY.value)
-
-  if (absX < 10 && absY < 10) {
-    return
-  }
-
-  swipeAxis.value = absX > absY ? 'horizontal' : 'vertical'
 }
 
 function handleTouchEnd() {
-  if (!swipeTracking.value) {
-    return
+  if (!swipeTracking.value) return
+  isDragging.value = false
+
+  if (swipeAxis.value === 'horizontal' && !isZoomed.value) {
+    const threshold = 60
+    if (swipeDeltaX.value <= -threshold) goTo(currentIndex.value + 1)
+    else if (swipeDeltaX.value >= threshold) goTo(currentIndex.value - 1)
   }
 
-  if (swipeAxis.value === 'horizontal') {
-    const threshold = 60
-    if (swipeDeltaX.value <= -threshold) {
-      goTo(currentIndex.value + 1)
-      return
-    }
-
-    if (swipeDeltaX.value >= threshold) {
-      goTo(currentIndex.value - 1)
-      return
-    }
+  if (isZoomed.value && scale.value < 1.1) {
+    resetZoom()
   }
 
   resetSwipe()
+}
+
+function handleWheel(event: WheelEvent) {
+  if (!props.open) return
+  event.preventDefault()
+  const delta = event.deltaY > 0 ? 0.9 : 1.1
+  const newScale = Math.min(Math.max(scale.value * delta, 1), 5)
+  if (newScale === 1) resetZoom()
+  else scale.value = newScale
 }
 
 function resetSwipe() {
@@ -268,24 +403,20 @@ function resetSwipe() {
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  if (!props.open) {
-    return
-  }
-
+  if (!props.open) return
   if (event.key === 'Escape') {
     emit('close')
     return
   }
-
-  if (!hasMultiple.value) {
+  if (isZoomed.value) {
+    if (event.key === 'r') resetZoom()
     return
   }
-
+  if (!hasMultiple.value) return
   if (event.key === 'ArrowLeft') {
     event.preventDefault()
     goTo(currentIndex.value - 1)
   }
-
   if (event.key === 'ArrowRight') {
     event.preventDefault()
     goTo(currentIndex.value + 1)
@@ -359,6 +490,59 @@ function handleKeydown(event: KeyboardEvent) {
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.06em;
+}
+
+/* ─── Reset Zoom ─── */
+.lightbox-reset {
+  position: absolute;
+  bottom: clamp(1.5rem, 6vw, 2.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  height: 2.8rem;
+  padding: 0 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.lightbox-reset:hover {
+  background: rgba(255, 255, 255, 0.24);
+  transform: translateX(-50%) scale(1.05);
+}
+
+.lightbox-tip-key {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(12px);
+}
+
+@media (max-width: 720px) {
+  .lightbox-tip-key {
+    display: none;
+  }
+  .lightbox-reset {
+    padding: 0 1rem;
+    height: 2.6rem;
+  }
 }
 
 /* ─── Stage (no frame/shell) ─── */

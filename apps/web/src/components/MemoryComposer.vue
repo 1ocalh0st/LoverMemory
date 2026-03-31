@@ -49,8 +49,8 @@
                     v-for="option in moodChoices"
                     :key="option.value"
                     class="pill-button"
-                    :class="{ active: form.mood === option.value }"
-                    @click="form.mood = option.value"
+                    :class="{ active: !form.customMood.trim() && form.mood === option.value }"
+                    @click="() => { form.mood = option.value; form.customMood = ''; }"
                   >
                     {{ option.label }}
                   </button>
