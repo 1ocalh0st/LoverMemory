@@ -16,6 +16,7 @@ import {
 import { ConfigService } from '@nestjs/config'
 import { generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
 import type { Response } from 'express'
+import * as nodemailer from 'nodemailer'
 import { IsEmail, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator'
 import { PrismaService } from '../prisma/prisma.service.js'
 import {
@@ -428,9 +429,10 @@ class AuthService {
   }
 
   async requestRecovery(input: RecoveryRequestDto) {
-    if (this.recoveryMode !== 'preview') {
+    const host = this.config.get('SMTP_HOST')
+    if (!host && this.recoveryMode !== 'preview') {
       throw new ServiceUnavailableException(
-        'Recovery email is not available in this deployment yet. Sign in with a saved passkey, or use another device that already has access.'
+        'Email system is not configured. Sign in with a saved passkey, or use another device that already has access.'
       )
     }
 
@@ -451,9 +453,37 @@ class AuthService {
       }
     })
 
+    const recoveryLink = `${this.rpOrigin}/recovery?token=${token}`
+
+    if (host) {
+      const transporter = nodemailer.createTransport({
+        host,
+        port: Number(this.config.get('SMTP_PORT') ?? 587),
+        secure: Number(this.config.get('SMTP_PORT')) === 465,
+        auth: {
+          user: this.config.get('SMTP_USER'),
+          pass: this.config.get('SMTP_PASS')
+        }
+      })
+
+      try {
+        transporter.sendMail({
+          from: this.config.get('SMTP_FROM') ?? '"LoverMemory" <hello@example.com>',
+          to: user.email,
+          subject: 'Recover your LoverMemory access',
+          text: `You requested to recover access to your LoverMemory account. Please use the following link to regain access: \n\n${recoveryLink}\n\nThis link will expire in 30 minutes.`
+        }).catch(err => {
+          console.error('Failed to send recovery email asynchronously', err)
+        })
+      } catch (error) {
+        console.error('Failed to initiate recovery email', error)
+        throw new ServiceUnavailableException('Failed to initiate recovery email.')
+      }
+    }
+
     return {
       accepted: true,
-      previewToken: process.env.NODE_ENV === 'production' ? undefined : token
+      previewToken: host ? undefined : (process.env.NODE_ENV === 'production' ? undefined : token)
     }
   }
 
