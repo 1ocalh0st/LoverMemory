@@ -45,9 +45,10 @@
           <summary>{{ t('auth.recovery') }}</summary>
           <p>{{ t('auth.recoveryBody') }}</p>
           <p v-if="recoveryMode === 'disabled'" class="auth-muted">{{ t('auth.recoveryDisabled') }}</p>
-          <p v-else class="auth-muted">{{ t('auth.recoveryPreview') }}</p>
+          <p v-else-if="recoveryMode === 'preview'" class="auth-muted">{{ t('auth.recoveryPreview') }}</p>
+          <p v-else class="auth-muted">{{ t('auth.recoveryEnabled') }}</p>
           <button
-            v-if="recoveryMode === 'preview'"
+            v-if="recoveryMode !== 'disabled'"
             class="button-secondary auth-recovery-action"
             :disabled="busy"
             @click="handleRecovery"

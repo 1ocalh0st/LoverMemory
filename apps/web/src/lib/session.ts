@@ -5,7 +5,7 @@ export interface SessionPayload {
   authenticated: boolean
   csrfToken: string
   vapidPublicKey: string | null
-  recoveryMode?: 'disabled' | 'preview'
+  recoveryMode?: 'disabled' | 'preview' | 'enabled'
   user?: {
     id: string
     email: string

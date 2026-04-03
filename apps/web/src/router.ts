@@ -11,6 +11,12 @@ export const router = createRouter({
       component: () => import('./pages/AuthPage.vue')
     },
     {
+      path: '/recovery',
+      name: 'recovery',
+      meta: { requiresAuth: false, requiresPairing: false },
+      component: () => import('./pages/RecoveryPage.vue')
+    },
+    {
       path: '/pairing',
       name: 'pairing',
       meta: { requiresAuth: true, requiresPairing: false },

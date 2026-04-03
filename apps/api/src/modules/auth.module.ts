@@ -87,6 +87,21 @@ class RecoveryVerifyDto {
   token!: string
 }
 
+class RecoveryRegisterStartDto {
+  @IsString()
+  @IsNotEmpty()
+  token!: string
+}
+
+class RecoveryRegisterFinishDto {
+  @IsString()
+  @IsNotEmpty()
+  token!: string
+
+  @IsObject()
+  credential!: Record<string, unknown>
+}
+
 @Injectable()
 class AuthService {
   constructor(
@@ -107,6 +122,9 @@ class AuthService {
   }
 
   private get recoveryMode() {
+    if (this.config.get('SMTP_HOST')) {
+      return 'enabled'
+    }
     return process.env.NODE_ENV === 'production' ? 'disabled' : 'preview'
   }
 
@@ -472,7 +490,7 @@ class AuthService {
           to: user.email,
           subject: 'Recover your LoverMemory access',
           text: `You requested to recover access to your LoverMemory account. Please use the following link to regain access: \n\n${recoveryLink}\n\nThis link will expire in 30 minutes.`
-        }).catch(err => {
+        }).catch((err: any) => {
           console.error('Failed to send recovery email asynchronously', err)
         })
       } catch (error) {
@@ -498,6 +516,132 @@ class AuthService {
 
     return {
       valid: true
+    }
+  }
+
+  async recoveryRegisterStart(input: RecoveryRegisterStartDto) {
+    const recoveryToken = await this.prisma.recoveryToken.findUnique({
+      where: { tokenHash: sha256(input.token) },
+      include: { user: { include: { passkeys: true } } }
+    })
+
+    if (!recoveryToken || recoveryToken.expiresAt < new Date() || recoveryToken.consumedAt) {
+      throw new BadRequestException('Recovery token is invalid or expired')
+    }
+
+    const { user } = recoveryToken
+
+    const options = await generateRegistrationOptions({
+      rpName: this.appName,
+      rpID: this.rpID,
+      userName: user.email,
+      userDisplayName: user.displayName ?? user.email,
+      userID: Buffer.from(user.id, 'utf8'),
+      attestationType: 'none',
+      authenticatorSelection: {
+        residentKey: 'preferred',
+        userVerification: 'preferred'
+      },
+      excludeCredentials: (user.passkeys ?? []).map((passkey: any) => ({
+        id: passkey.credentialId,
+        type: 'public-key'
+      })) as any
+    })
+
+    await this.prisma.authChallenge.upsert({
+      where: {
+        userId_kind: {
+          userId: user.id,
+          kind: 'registration'
+        }
+      },
+      update: {
+        challenge: options.challenge,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 10),
+        rpId: this.rpID
+      },
+      create: {
+        userId: user.id,
+        kind: 'registration',
+        challenge: options.challenge,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 10),
+        rpId: this.rpID
+      }
+    })
+
+    return options
+  }
+
+  async recoveryRegisterFinish(input: RecoveryRegisterFinishDto, response: Response, meta?: { userAgent?: string; ipAddress?: string }) {
+    const recoveryToken = await this.prisma.recoveryToken.findUnique({
+      where: { tokenHash: sha256(input.token) },
+      include: { user: { include: { authChallenges: true, passkeys: true } } }
+    })
+
+    if (!recoveryToken || recoveryToken.expiresAt < new Date() || recoveryToken.consumedAt) {
+      throw new BadRequestException('Recovery token is invalid or expired')
+    }
+
+    const { user } = recoveryToken
+
+    const challenge = user.authChallenges.find((item: any) => item.kind === 'registration')
+    if (!challenge || challenge.expiresAt < new Date()) {
+      throw new BadRequestException('Registration challenge expired')
+    }
+
+    const verification = await verifyRegistrationResponse({
+      response: input.credential as any,
+      expectedChallenge: challenge.challenge,
+      expectedOrigin: this.rpOrigin,
+      expectedRPID: this.rpID,
+      requireUserVerification: true
+    })
+
+    if (!verification.verified || !verification.registrationInfo) {
+      throw new UnauthorizedException('Passkey registration failed')
+    }
+
+    const registrationInfo = verification.registrationInfo
+
+    await this.prisma.$transaction([
+      this.prisma.passkeyCredential.create({
+        data: {
+          userId: user.id,
+          webAuthnUserId: user.id,
+          credentialId: registrationInfo.credential.id,
+          publicKey: Buffer.from(registrationInfo.credential.publicKey),
+          counter: registrationInfo.credential.counter,
+          deviceType: registrationInfo.credentialDeviceType,
+          backedUp: registrationInfo.credentialBackedUp,
+          transports: JSON.stringify((input.credential as any).response?.transports ?? []),
+          label: user.displayName ?? user.email
+        }
+      }),
+      this.prisma.authChallenge.delete({
+        where: {
+          userId_kind: {
+            userId: user.id,
+            kind: 'registration'
+          }
+        }
+      }),
+      this.prisma.recoveryToken.update({
+        where: { id: recoveryToken.id },
+        data: { consumedAt: new Date() }
+      })
+    ])
+
+    await this.createSession(user.id, response, meta)
+
+    const freshUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      include: { membership: true }
+    })
+
+    return {
+      authenticated: true,
+      user: mapSessionUser(freshUser!),
+      needsPairing: !freshUser?.membership
     }
   }
 
@@ -576,6 +720,21 @@ class AuthController {
   @Post('auth/recovery/verify')
   recoveryVerify(@Body() body: RecoveryVerifyDto) {
     return this.authService.verifyRecovery(body)
+  }
+
+  @Public()
+  @Post('auth/recovery/register/start')
+  recoveryRegisterStart(@Body() body: RecoveryRegisterStartDto) {
+    return this.authService.recoveryRegisterStart(body)
+  }
+
+  @Public()
+  @Post('auth/recovery/register/finish')
+  recoveryRegisterFinish(@Body() body: RecoveryRegisterFinishDto, @Res({ passthrough: true }) response: Response) {
+    return this.authService.recoveryRegisterFinish(body, response, {
+      userAgent: response.req.headers['user-agent'],
+      ipAddress: response.req.ip
+    })
   }
 
   @Delete('auth/session')
