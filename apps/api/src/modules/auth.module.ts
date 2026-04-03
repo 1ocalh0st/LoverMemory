@@ -485,11 +485,33 @@ class AuthService {
       })
 
       try {
+        const html = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fcfaf8; padding: 40px 20px; color: #3c3c43;">
+            <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.04); border: 1px solid #f2ece4;">
+              <div style="padding: 40px; text-align: center;">
+                <div style="margin-bottom: 24px;">
+                  <span style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #1c1c1e;">${this.appName}</span>
+                </div>
+                <h1 style="font-size: 28px; font-weight: 800; line-height: 1.2; margin: 0 0 16px; color: #1c1c1e; letter-spacing: -0.02em;">恢复您的访问权限</h1>
+                <p style="font-size: 16px; line-height: 1.5; margin: 0 0 32px; color: #636366;">您好，我们收到了恢复账户访问权限的请求。点击下方按钮即可在当前设备重新绑定登录凭证。</p>
+                <a href="${recoveryLink}" style="display: inline-block; background-color: #1c1c1e; color: #ffffff; padding: 16px 32px; border-radius: 14px; font-size: 16px; font-weight: 600; text-decoration: none; transition: background-color 0.2s;">重新绑定当前设备</a>
+                <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #f2ece4;">
+                  <p style="font-size: 13px; line-height: 1.5; margin: 0; color: #8e8e93;">此链接将在 30 分钟后过期。如果您并未请求此操作，请忽略此邮件。</p>
+                </div>
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 24px;">
+              <p style="font-size: 12px; color: #aeaeb2; margin: 0;">&copy; ${new Date().getFullYear()} ${this.appName}. All rights reserved.</p>
+            </div>
+          </div>
+        `
+
         transporter.sendMail({
-          from: this.config.get('SMTP_FROM') ?? '"LoverMemory" <hello@example.com>',
+          from: this.config.get('SMTP_FROM') ?? `"${this.appName}" <hello@example.com>`,
           to: user.email,
-          subject: 'Recover your LoverMemory access',
-          text: `You requested to recover access to your LoverMemory account. Please use the following link to regain access: \n\n${recoveryLink}\n\nThis link will expire in 30 minutes.`
+          subject: `[${this.appName}] 恢复您的账号访问权限`,
+          text: `您好，我们收到了恢复账户访问权限的请求。请使用以下链接在当前设备重新绑定凭证：\n\n${recoveryLink}\n\n该链接将在 30 分钟后过期。`,
+          html
         }).catch((err: any) => {
           console.error('Failed to send recovery email asynchronously', err)
         })
